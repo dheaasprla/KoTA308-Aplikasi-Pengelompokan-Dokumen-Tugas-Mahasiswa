@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Klasterisasi</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        
+        /* Card Styles */
+        .card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #e74c3c; }
+        .card.safe { border-top: 5px solid #2ecc71; }
+        .card h3 { margin-top: 0; color: #2c3e50; font-size: 18px; border-bottom: 1px solid #ecf0f1; padding-bottom: 10px; }
+        .doc-list { list-style-type: none; padding: 0; margin: 0; }
+        .doc-list li { padding: 8px 0; border-bottom: 1px dashed #ecf0f1; font-size: 14px; }
+        .doc-list li::before { content: "📄 "; }
+        
+        .btn-back { display: inline-block; background: #34495e; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 5px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Hasil Analisis NetworkX</h1>
+            <p>Threshold Kemiripan: <strong>{{ threshold }}</strong></p>
+        </div>
+
+        <h2 style="color: #c0392b;">Terindikasi Mirip (Klaster)</h2>
+        {% if clusters %}
+            <div class="grid-container">
+                {% for cluster in clusters %}
+                <div class="card">
+                    <h3>Kelompok {{ loop.index }}</h3>
+                    <ul class="doc-list">
+                        {% for doc in cluster %}
+                        <li>{{ doc }}</li>
+                        {% end endfor %}
+                    </ul>
+                </div>
+                {% end for %}
+            </div>
+        {% else %}
+            <p style="color: #7f8c8d;">Tidak ditemukan indikasi kemiripan di atas threshold.</p>
+        {% endif %}
+
+        <hr style="border: 0; height: 1px; background: #bdc3c7; margin: 40px 0;">
+
+        <h2 style="color: #27ae60;">Dokumen Unik (Aman / Outliers)</h2>
+        {% if outliers %}
+            <div class="grid-container">
+                <div class="card safe">
+                    <h3>Isolated Nodes</h3>
+                    <ul class="doc-list">
+                        {% for doc in outliers %}
+                        <li>{{ doc }}</li>
+                        {% end for %}
+                    </ul>
+                </div>
+            </div>
+        {% else %}
+            <p style="color: #7f8c8d;">Semua dokumen terindikasi memiliki kemiripan.</p>
+        {% endif %}
+
+        <div style="text-align: center;">
+            <a href="/" class="btn-back">Kembali ke Beranda</a>
+        </div>
+    </div>
+</body>
+</html>
