@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KoTA-308 | Unggah Dokumen</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/unggah_dokumen.css') }}" />
+</head>
+
+<body>
+
+    <!-- ═══════════ SIDEBAR ═══════════ -->
+    <aside class="sidebar">
+        <button class="menu-btn">
+            <i class="fa-solid fa-bars"></i> Menu
+        </button>
+        <hr class="sidebar-divider" />
+
+        <a href="#" class="nav-link active">
+            <i class="fa-solid fa-file-arrow-up"></i> Unggah Dokumen
+        </a>
+        <a href="#" class="nav-link">
+            <i class="fa-solid fa-circle-nodes"></i> Hasil Klaster
+        </a>
+        <a href="#" class="nav-link">
+            <i class="fa-solid fa-clock-rotate-left"></i> Riwayat
+        </a>
+
+        <div class="sidebar-user">
+            <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+            <div class="user-detail">
+                <div class="user-name">Jhon Doe</div>
+                <div class="user-email">jhondoe@gmail.com</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ═══════════ MAIN CONTENT ═══════════ -->
+    <main class="main">
+        <h1 class="page-title">Unggah Dokumen</h1>
+        <p class="page-subtitle">Isi detail sesi dan unggah berkas tugas mahasiswa (.pdf)</p>
+
+        <!-- Alert -->
+        <div class="alert">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Sesi aktif saat ini akan terhapus jika analisis baru dimulai. Unduh laporan terlebih dahulu jika dibutuhkan.
+        </div>
+
+        <!-- Grid Atas -->
+        <div class="top-grid">
+
+            <!-- KIRI: Form + Kuota -->
+            <div class="left-col">
+
+                <!-- Card 1: Informasi Sesi Baru -->
+                <div class="card">
+                    <div class="card-title">Informasi Sesi Baru</div>
+                    <div class="card-subtitle">Hanya isi nama mata kuliah, kelas, dan threshold</div>
+                    
+                    <div class="form-group">
+                        <label for="mata_kuliah">Nama Mata Kuliah</label>
+                        <input type="text" id="mata_kuliah" name="mata_kuliah" placeholder="" autocomplete="off">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="kelas">Kelas</label>
+                        <input type="text" id="kelas" name="kelas" placeholder="" autocomplete="off">
+                    </div>
+                </div>
+
+                <!-- Card 2: Status Kuota -->
+                <div class="quota-card">
+                <div class="quota-head"><i class="fa-solid fa-database" style="margin-right: 6px;"></i>Status Kuota</div>
+                    <div class="quota-pct" id="quota-pct">0% dari kuota digunakan</div>
+                    <div class="quota-track">
+                        <div class="quota-fill" id="quota-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="quota-stats">
+                        <div class="quota-stat">
+                        <div class="qs-label"><i class="fa-solid fa-hard-drive" style="margin-right:6px;"></i>Ukuran Terpakai</div>
+                            <div class="qs-value" id="quota-size-used">0MB/200MB</div>
+                        </div>
+                        <div class="quota-stat">
+                            <div class="qs-icon"><i class="fa-solid fa-file"></i></div>
+                             <div class="qs-label"><i class="fa-solid fa-hdd"></i>Sisa Kuota Ukuran</div>
+                            <div class="qs-value" id="quota-size-rem">200MB</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /left-col -->
+
+            <!-- KANAN: Upload + Batasan -->
+            <div class="right-col">
+
+                <!-- Card 1: Upload Zone -->
+                <div class="upload-zone" id="dropZone">
+                    <input type="file" id="hiddenInput" accept=".pdf" multiple style="display: none;">
+                    <i class="fa-solid fa-cloud-arrow-up cloud-icon"></i>
+                    <div class="upload-title">Drag and drop your files here</div>
+                    <div class="upload-sub">PDF formats, up to 50 MB</div>
+                    <button type="button" class="btn-select" id="btn-select-trigger">Select File</button>
+                </div>
+
+                <!-- Card 2: Batasan Sistem -->
+                <div class="warn-card">
+                    <div class="warn-title">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Batasan Sistem
+                    </div>
+                    <ul class="warn-list">
+                        <li><i class="fa-solid fa-circle-check"></i> Hanya .pdf berbasis teks yang didukung.</li>
+                        <li><i class="fa-solid fa-ban"></i> Tidak mendukung dokumen hasil scan (OCR tidak tersedia).</li>
+                        <li><i class="fa-solid fa-camera"></i> Gambar di dalam PDF tidak akan dianalisis.</li>
+                    </ul>
+                </div>
+
+            </div><!-- /right-col -->
+        </div><!-- /top-grid -->
+
+        <!-- Berkas Terunggah -->
+        <div class="files-section" id="files-section" style="display: none;">
+            <div class="files-header-row">
+                <div class="files-title"><i class="fa-solid fa-file-lines" style="margin-right: 6px;"></i>Berkas Terunggah</div>
+                <button type="button" class="btn-clear-all" id="btn-clear-all" style="display: none;">
+                    <i class="fa-solid fa-trash-can"></i> Hapus Semua
+                </button>
+            </div>
+            <div class="files-grid" id="filesGrid">
+                <!-- Dynamic File Items via JS -->
+            </div>
+        </div><!-- /files-section -->
+
+        <!-- Footer Aksi -->
+        <div class="footer">
+            <button type="button" class="btn-cancel" id="btn-cancel-form">Batalkan</button>
+            <button type="button" class="btn-next" id="btn-next-step" disabled>Lanjutkan</button>
+        </div>
+
+    </main>
+
+    <!-- ═══════════ MODAL 1: PROGRES UNGGAH (LOADING) ═══════════ -->
+    <div class="modal-backdrop" id="modal-loading">
+        <div class="modal-card">
+            <div class="modal-icon-container loading-anim">
+                <i class="fa-solid fa-spinner fa-spin spinner-icon"></i>
+            </div>
+            <h2 id="loading-title">Mengunggah Dokumen</h2>
+            <p id="loading-subtitle">Mohon tunggu, berkas sedang dipindahkan ke server...</p>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="progress-status">
+                <span id="progress-text">0% Selesai</span>
+                <span id="progress-files">0 dari 0 Berkas</span>
+            </div>
+
+            <button type="button" class="btn-secondary" id="btn-cancel-upload">
+                <i class="fa-solid fa-ban"></i> Batalkan Proses
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODAL 2: KONFIGURASI THRESHOLD ═══════════ -->
+    <div class="modal-backdrop" id="modal-threshold">
+        <div class="modal-card scale-up">
+            <div class="modal-icon-container success-badge">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h2>Unggah Berkas Berhasil!</h2>
+            <p>Atur ambang batas kemiripan awal (threshold) untuk mendeteksi klaster tugas mahasiswa.</p>
+            
+            <div class="threshold-config-box">
+                <div class="threshold-value-display">
+                    <span id="threshold-val">70</span><span class="percent-sign">%</span>
+                </div>
+                <div class="slider-wrapper">
+                    <span class="slider-bound">10%</span>
+                    <input type="range" id="threshold" min="0.1" max="1.0" step="0.05" value="0.70" class="premium-slider">
+                    <span class="slider-bound">100%</span>
+                </div>
+                
+                <div class="threshold-info-card" id="threshold-status-card">
+                    <div class="info-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="info-desc">
+                        <strong id="threshold-title-desc">Plagiarisme Berat</strong>
+                        <p id="threshold-body-desc">Hanya dokumen dengan kecocokan makna semantik di atas 70% yang akan dimasukkan ke dalam klaster.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <input type="hidden" id="dummy-session-id">
+                <button type="button" class="btn-secondary" id="btn-back-to-upload">
+                    <i class="fa-solid fa-chevron-left"></i> Kembali
+                </button>
+                <button type="button" class="btn-success" id="btn-start-analysis">
+                    <i class="fa-solid fa-circle-play"></i> Mulai Analisis SBERT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/unggah_dokumen.js') }}"></script>
+</body>
+
+</html>
