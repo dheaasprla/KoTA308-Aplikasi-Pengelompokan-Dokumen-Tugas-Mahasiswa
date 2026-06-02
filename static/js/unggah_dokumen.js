@@ -1,437 +1,285 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements - Metadata Inputs
-    const mataKuliahInput = document.getElementById('mata_kuliah');
-    const kelasInput = document.getElementById('kelas');
-    
-    // DOM Elements - Upload Zone
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('hiddenInput');
-    const btnSelectTrigger = document.getElementById('btn-select-trigger');
-    
-    // DOM Elements - Quota Stats
-    const quotaPctText = document.getElementById('quota-pct');
-    const quotaFillBar = document.getElementById('quota-fill');
-    const quotaCountText = document.getElementById('quota-count');
-    const quotaRemainingText = document.getElementById('quota-remaining');
+// ══════════════════════════════════════
+// unggah_dokumen.js
+// Logika utama halaman Unggah Dokumen
+//
+// ALUR BARU:
+// 1. Pilih file → modal loading "Mengunggah Dokumen" muncul
+// 2. Loading selesai (simulasi) → modal tutup, grid berkas + kuota tampil
+// 3. Klik "Lanjutkan" → hanya modal konfigurasi threshold (tanpa loading)
+// ══════════════════════════════════════
 
-    // DOM Elements - Files List
-    const filesSection = document.getElementById('files-section');
-    const filesGrid = document.getElementById('filesGrid');
-    const selectedCountLabel = document.getElementById('selected-count-label');
-    const btnClearAll = document.getElementById('btn-clear-all');
-    
-    // DOM Elements - Form Actions
-    const btnCancelForm = document.getElementById('btn-cancel-form');
-    const btnNextStep = document.getElementById('btn-next-step');
-    
-    // DOM Elements - Loading Modal
-    const modalLoading = document.getElementById('modal-loading');
-    const progressBar = document.getElementById('progress-bar');
-    const progressText = document.getElementById('progress-text');
-    const progressFiles = document.getElementById('progress-files');
-    const btnCancelUpload = document.getElementById('btn-cancel-upload');
-    const loadingTitle = document.getElementById('loading-title');
-    const loadingSubtitle = document.getElementById('loading-subtitle');
-    
-    // DOM Elements - Threshold Modal
-    const modalThreshold = document.getElementById('modal-threshold');
-    const thresholdSlider = document.getElementById('threshold');
-    const thresholdVal = document.getElementById('threshold-val');
-    const thresholdCard = document.getElementById('threshold-status-card');
-    const thresholdTitleDesc = document.getElementById('threshold-title-desc');
-    const thresholdBodyDesc = document.getElementById('threshold-body-desc');
-    
-    const btnBackToUpload = document.getElementById('btn-back-to-upload');
-    const btnStartAnalysis = document.getElementById('btn-start-analysis');
-    const dummySessionInput = document.getElementById('dummy-session-id');
+(function () {
 
-    // State Variables
-    let selectedFiles = [];
-    const MAX_FILES = 32;
-    let currentXHR = null;
+  /* ══ KONFIGURASI ══ */
+  var MAX_TOTAL_MB = 200;
+  var MAX_FILE_MB = 50;
+  var MAX_FILES = 32;
+  var CIRCUMFERENCE = 2 * Math.PI * 48; // r=48
 
-    // --- 1. Selection and Trigger Event Handlers ---
+  /* ══ STATE ══ */
+  var usedMB = 0;
+  var fileList = [];
+  // sessionId disimpan setelah "upload" dummy selesai
+  var currentSessionId = '';
 
-    // Click on dropzone triggers file dialog
-    dropZone.addEventListener('click', (e) => {
-        // Prevent trigger loop if clicked button itself
-        if (e.target !== btnSelectTrigger) {
-            fileInput.click();
-        }
+  /* ══ DOM REFS ══ */
+  var dropZone = document.getElementById('dropZone');
+  var hiddenInput = document.getElementById('hiddenInput');
+  var btnSelect = document.getElementById('btn-select-trigger');
+  var filesSection = document.getElementById('files-section');
+  var filesGrid = document.getElementById('filesGrid');
+  var btnClearAll = document.getElementById('btn-clear-all');
+  var btnNext = document.getElementById('btn-next-step');
+  var btnCancel = document.getElementById('btn-cancel-form');
+  var quotaCard = document.getElementById('quotaCard');
+
+  var elQuotaPct = document.getElementById('quota-pct');
+  var elQuotaFill = document.getElementById('quota-fill');
+  var elSizeUsed = document.getElementById('quota-size-used');
+  var elSizeRem = document.getElementById('quota-size-rem');
+  var elDonutArc = document.getElementById('donut-arc');
+  var elDonutCount = document.getElementById('donut-count');
+
+  // Modal loading (Mengunggah Dokumen)
+  var modalLoading = document.getElementById('modal-loading');
+  var elProgressBar = document.getElementById('progress-bar');
+  var elProgressText = document.getElementById('progress-text');
+  var btnCloseUpload = document.getElementById('btn-close-upload');
+  var btnBatalUnggah = document.getElementById('btn-batal-unggah');
+
+  // Modal threshold
+  var modalThreshold = document.getElementById('modal-threshold');
+
+  /* ══ INIT DONUT ══ */
+  function initDonut() {
+    elDonutArc.style.fill = 'none';
+    elDonutArc.style.stroke = '#B00505';
+    elDonutArc.style.strokeWidth = '13';
+    elDonutArc.style.strokeLinecap = 'round';
+    elDonutArc.style.strokeDasharray = CIRCUMFERENCE.toFixed(2);
+    elDonutArc.style.strokeDashoffset = CIRCUMFERENCE.toFixed(2);
+    elDonutArc.style.transition = 'stroke-dashoffset 0.5s ease, stroke 0.4s ease';
+  }
+
+  /* ══ DRAG & DROP ══ */
+  dropZone.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    dropZone.classList.add('drag');
+  });
+  dropZone.addEventListener('dragleave', function () {
+    dropZone.classList.remove('drag');
+  });
+  dropZone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    dropZone.classList.remove('drag');
+    handleFilesSelected(e.dataTransfer.files);
+  });
+  dropZone.addEventListener('click', function (e) {
+    if (e.target === btnSelect || btnSelect.contains(e.target)) return;
+    hiddenInput.click();
+  });
+  btnSelect.addEventListener('click', function (e) {
+    e.stopPropagation();
+    hiddenInput.click();
+  });
+  hiddenInput.addEventListener('change', function () {
+    handleFilesSelected(this.files);
+    this.value = '';
+  });
+
+  /* ══ HANDLE FILE SELECTED → langsung tampilkan loading ══ */
+  function handleFilesSelected(rawFiles) {
+    // Validasi dulu sebelum loading
+    var toAdd = [];
+    var hasError = false;
+
+    Array.from(rawFiles).forEach(function (f) {
+      if (!f.name.toLowerCase().endsWith('.pdf')) {
+        alert('File "' + f.name + '" bukan PDF. Hanya file .pdf yang diterima.');
+        hasError = true; return;
+      }
+      if (fileList.length + toAdd.length >= MAX_FILES) {
+        alert('Batas maksimal ' + MAX_FILES + ' file tercapai.');
+        hasError = true; return;
+      }
+      var sizeMB = f.size / (1024 * 1024);
+      if (sizeMB > MAX_FILE_MB) {
+        alert('File "' + f.name + '" melebihi batas 50MB.');
+        hasError = true; return;
+      }
+      if (usedMB + toAdd.reduce(function (a, b) { return a + b.sizeMB; }, 0) + sizeMB > MAX_TOTAL_MB) {
+        alert('Kuota penuh! Tidak bisa menambah "' + f.name + '".');
+        hasError = true; return;
+      }
+      toAdd.push({ name: f.name, sizeMB: sizeMB, fileObj: f });
     });
 
-    btnSelectTrigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        fileInput.click();
-    });
+    if (toAdd.length === 0) return;
 
-    // Handle cancel button on form resets inputs
-    btnCancelForm.addEventListener('click', () => {
-        if (confirm('Batalkan sesi analisis baru dan reset semua input?')) {
-            mataKuliahInput.value = '';
-            kelasInput.value = '';
-            selectedFiles = [];
-            updateUI();
-        }
+    // Tampilkan modal loading, lalu simulasikan proses
+    showUploadLoading(toAdd, function (success) {
+      if (!success) return;
+      // Tambahkan ke fileList setelah loading selesai
+      toAdd.forEach(function (item) {
+        fileList.push(item);
+        usedMB += item.sizeMB;
+      });
+      renderGrid();
+      updateQuota();
     });
+  }
 
-    // Prevent default drag and drop behaviors
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-        document.body.addEventListener(eventName, preventDefaults, false);
-    });
+  /* ══ MODAL LOADING: simulasi progress upload ══ */
+  var cancelFlag = false;
+  var loadingTimer = null;
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
+  function showUploadLoading(files, callback) {
+    cancelFlag = false;
+    modalLoading.classList.add('active');
+    elProgressBar.style.width = '0%';
+    elProgressText.textContent = '0%';
+
+    var pct = 0;
+    // Kecepatan simulasi: selesai dalam ~1.5 detik
+    var step = 4;
+    var interval = 60; // ms
+
+    loadingTimer = setInterval(function () {
+      if (cancelFlag) {
+        clearInterval(loadingTimer);
+        modalLoading.classList.remove('active');
+        callback(false);
+        return;
+      }
+      pct += step + Math.random() * 3;
+      if (pct >= 100) {
+        pct = 100;
+        clearInterval(loadingTimer);
+        elProgressBar.style.width = '100%';
+        elProgressText.textContent = '100%';
+        setTimeout(function () {
+          modalLoading.classList.remove('active');
+          // Reset progress untuk next kali
+          elProgressBar.style.width = '0%';
+          elProgressText.textContent = '0%';
+          callback(true);
+        }, 400);
+        return;
+      }
+      elProgressBar.style.width = pct.toFixed(0) + '%';
+      elProgressText.textContent = pct.toFixed(0) + '%';
+    }, interval);
+  }
+
+  function cancelUpload() {
+    cancelFlag = true;
+    if (loadingTimer) clearInterval(loadingTimer);
+    modalLoading.classList.remove('active');
+  }
+
+  btnCloseUpload.addEventListener('click', cancelUpload);
+  btnBatalUnggah.addEventListener('click', cancelUpload);
+
+  /* ══ RENDER GRID ══ */
+  function renderGrid() {
+    filesGrid.innerHTML = '';
+    if (fileList.length === 0) {
+      filesSection.style.display = 'none';
+      btnNext.disabled = true;
+      return;
     }
+    filesSection.style.display = 'block';
+    btnNext.disabled = false;
 
-    // Toggle highlight class when dragging over
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => {
-            dropZone.classList.add('dragover');
-        }, false);
+    fileList.forEach(function (item, idx) {
+      var sz = item.sizeMB < 1
+        ? (item.sizeMB * 1024).toFixed(0) + ' KB'
+        : item.sizeMB.toFixed(1) + 'MB';
+      var div = document.createElement('div');
+      div.className = 'file-item';
+      div.innerHTML =
+        '<i class="fa-solid fa-file-lines fi-icon"></i>' +
+        '<div class="fi-info">' +
+        '<div class="fi-name" title="' + escHtml(item.name) + '">' + escHtml(item.name) + '</div>' +
+        '<div class="fi-size">' + sz + '</div>' +
+        '</div>' +
+        '<button class="fi-del" data-idx="' + idx + '" title="Hapus">' +
+        '<i class="fa-solid fa-trash-can"></i>' +
+        '</button>';
+      filesGrid.appendChild(div);
     });
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => {
-            dropZone.classList.remove('dragover');
-        }, false);
+    filesGrid.querySelectorAll('.fi-del').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var i = parseInt(this.getAttribute('data-idx'));
+        usedMB -= fileList[i].sizeMB;
+        if (usedMB < 0) usedMB = 0;
+        fileList.splice(i, 1);
+        renderGrid();
+        updateQuota();
+      });
     });
+  }
 
-    // Handle dropped files
-    dropZone.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        handleFilesSelection(files);
-    });
+  function escHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
 
-    // Handle selected files via file dialog
-    fileInput.addEventListener('change', (e) => {
-        handleFilesSelection(e.target.files);
-    });
+  /* ══ UPDATE KUOTA + DONUT ══ */
+  function updateQuota() {
+    var total = fileList.length;
+    var pctMB = Math.min((usedMB / MAX_TOTAL_MB) * 100, 100);
+    var pctF = Math.min(total / MAX_FILES, 1);
+    var rem = Math.max(MAX_TOTAL_MB - usedMB, 0);
+    var isHigh = pctMB >= 80;
 
-    // --- 2. Files Selection & Validation Logic ---
+    elQuotaPct.textContent = Math.round(pctMB) + '% dari kuota digunakan';
+    elQuotaFill.style.width = pctMB.toFixed(1) + '%';
+    elSizeUsed.textContent = usedMB.toFixed(1) + 'MB/200MB';
+    elSizeRem.textContent = rem.toFixed(1) + 'MB';
 
-    function handleFilesSelection(filesListObj) {
-        const incomingFiles = Array.from(filesListObj);
-        let errorMessages = [];
+    elDonutArc.style.strokeDashoffset = (CIRCUMFERENCE * (1 - pctF)).toFixed(2);
+    elDonutCount.textContent = total + '/32';
+    elDonutArc.style.stroke = '#B00505';
+    elQuotaFill.style.background = '#B00505';
 
-        incomingFiles.forEach(file => {
-            // Validasi format file PDF (Fixed `.endswith` syntax error to `.endsWith`)
-            if (!file.name.toLowerCase().endsWith('.pdf')) {
-                errorMessages.push(`Berkas "${file.name}" ditolak karena bukan berformat .pdf.`);
-                return;
-            }
+    if (isHigh) { quotaCard.classList.add('warn'); }
+    else { quotaCard.classList.remove('warn'); }
+  }
 
-            // Validasi duplikat berkas berdasarkan nama dan ukuran
-            const isDuplicate = selectedFiles.some(existingFile => 
-                existingFile.name === file.name && existingFile.size === file.size
-            );
+  /* ══ HAPUS SEMUA ══ */
+  btnClearAll.addEventListener('click', function () {
+    fileList = []; usedMB = 0;
+    renderGrid(); updateQuota();
+  });
 
-            if (isDuplicate) {
-                return; // Lewati jika duplikat
-            }
+  /* ══ BATALKAN ══ */
+  btnCancel.addEventListener('click', function () {
+    fileList = []; usedMB = 0;
+    document.getElementById('mata_kuliah').value = '';
+    document.getElementById('kelas').value = '';
+    renderGrid(); updateQuota();
+  });
 
-            // Validasi kapasitas maksimal 32 file
-            if (selectedFiles.length >= MAX_FILES) {
-                errorMessages.push(`Batas maksimal ${MAX_FILES} berkas terlampaui.`);
-                return;
-            }
-
-            // Tambahkan ke array selectedFiles
-            selectedFiles.push(file);
-        });
-
-        if (errorMessages.length > 0) {
-            alert(errorMessages.join('\n'));
-        }
-
-        updateUI();
-        fileInput.value = ''; // Reset input agar bisa memilih file yang sama lagi
+  /* ══ LANJUTKAN → hanya buka modal threshold ══ */
+  btnNext.addEventListener('click', function () {
+    var matkul = document.getElementById('mata_kuliah').value.trim();
+    var kelas = document.getElementById('kelas').value.trim();
+    if (!matkul || !kelas) {
+      alert('Harap isi Nama Mata Kuliah dan Kelas terlebih dahulu.');
+      return;
     }
-
-    // Remove single file
-    window.removeFile = function(index) {
-        selectedFiles.splice(index, 1);
-        updateUI();
-    };
-
-    // Clear all files
-    btnClearAll.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (confirm('Apakah Anda yakin ingin menghapus semua berkas terpilih?')) {
-            selectedFiles = [];
-            updateUI();
-        }
-    });
-
-    // Update UI elements based on selectedFiles state
-    function updateUI() {
-        const fileCount = selectedFiles.length;
-        
-        // Update Quota Badge / Quota Card
-        const pctUsed = Math.round((fileCount / MAX_FILES) * 100);
-        quotaPctText.textContent = `${pctUsed}% dari kuota terpakai`;
-        quotaFillBar.style.width = `${pctUsed}%`;
-        quotaCountText.textContent = `${fileCount} / ${MAX_FILES} Berkas`;
-        quotaRemainingText.textContent = `${MAX_FILES - fileCount} Berkas`;
-
-        if (fileCount >= MAX_FILES) {
-            quotaFillBar.style.backgroundColor = 'var(--danger)';
-            quotaPctText.style.color = 'var(--danger)';
-        } else {
-            quotaFillBar.style.backgroundColor = '';
-            quotaPctText.style.color = '';
-        }
-
-        // Selected Files List Container
-        selectedCountLabel.textContent = `${fileCount} Berkas`;
-        if (fileCount > 0) {
-            filesSection.style.display = 'block';
-            btnClearAll.style.display = 'inline-flex';
-            
-            // Render items in grid format
-            filesGrid.innerHTML = selectedFiles.map((file, index) => `
-                <div class="file-item">
-                    <i class="fa-solid fa-file-lines fi-icon"></i>
-                    <div class="fi-info">
-                        <div class="fi-name" title="${file.name}">${file.name}</div>
-                        <div class="fi-size">${formatBytes(file.size)}</div>
-                    </div>
-                    <button type="button" class="fi-del" onclick="removeFile(${index})" title="Hapus berkas">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
-            `).join('');
-        } else {
-            filesSection.style.display = 'none';
-            btnClearAll.style.display = 'none';
-            filesGrid.innerHTML = '';
-        }
-
-        // Validate Form to Enable Submit Button
-        validateForm();
+    if (fileList.length === 0) {
+      alert('Belum ada berkas yang dipilih.');
+      return;
     }
+    // Langsung buka modal threshold — tidak ada loading lagi
+    if (window.initThresholdModal) window.initThresholdModal(currentSessionId);
+    modalThreshold.classList.add('active');
+  });
 
-    // Format bytes to human readable format
-    function formatBytes(bytes, decimals = 1) {
-        if (!+bytes) return '0 Bytes';
-        const k = 1024;
-        const dm = decimals < 0 ? 0 : decimals;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-    }
+  /* ══ INIT ══ */
+  initDonut();
+  updateQuota();
 
-    // Validate form inputs
-    function validateForm() {
-        const isMetadataFilled = mataKuliahInput.value.trim() !== '' && kelasInput.value.trim() !== '';
-        // Minimal 2 berkas untuk melakukan perbandingan kemiripan
-        const hasMinFiles = selectedFiles.length >= 2;
-        
-        btnNextStep.disabled = !(isMetadataFilled && hasMinFiles);
-    }
-
-    // Listen to input metadata changes to instantly update submit state
-    mataKuliahInput.addEventListener('input', validateForm);
-    kelasInput.addEventListener('input', validateForm);
-
-    // --- 3. Form Submit / Upload Handlers (AJAX Process) ---
-
-    btnNextStep.addEventListener('click', () => {
-        // Buat FormData
-        const formData = new FormData();
-        formData.append('mata_kuliah', mataKuliahInput.value.trim());
-        formData.append('kelas', kelasInput.value.trim());
-        
-        selectedFiles.forEach(file => {
-            formData.append('pdf_files', file);
-        });
-
-        // Tampilkan Modal Loading
-        showLoadingModal(selectedFiles.length);
-
-        // AJAX Upload menggunakan XMLHttpRequest untuk tracking progress
-        currentXHR = new XMLHttpRequest();
-        currentXHR.open('POST', '/upload-dummy', true);
-
-        // Upload progress tracking
-        currentXHR.upload.addEventListener('progress', (e) => {
-            if (e.lengthComputable) {
-                // Skala progress upload berkas (0% sampai 80%)
-                const percentComplete = Math.round((e.loaded / e.total) * 80);
-                updateProgressBar(percentComplete, `Mengunggah berkas ke server...`);
-            }
-        });
-
-        // Selesai upload, menunggu respon pemrosesan server
-        currentXHR.addEventListener('load', () => {
-            if (currentXHR.status === 200) {
-                // Selesaikan progress bar ke 100%
-                updateProgressBar(100, `Pemindahan berkas selesai!`);
-                
-                setTimeout(() => {
-                    const response = JSON.parse(currentXHR.responseText);
-                    hideLoadingModal();
-                    
-                    // Set dummy session id dan tampilkan modal config threshold
-                    dummySessionInput.value = response.data.session_id;
-                    showThresholdModal();
-                }, 500);
-            } else {
-                hideLoadingModal();
-                let errorMsg = 'Terjadi kesalahan saat mengunggah berkas.';
-                try {
-                    const response = JSON.parse(currentXHR.responseText);
-                    errorMsg = response.message || errorMsg;
-                } catch(e) {}
-                alert(errorMsg);
-            }
-        });
-
-        currentXHR.addEventListener('error', () => {
-            hideLoadingModal();
-            alert('Koneksi terputus. Gagal menghubungi server.');
-        });
-
-        currentXHR.addEventListener('abort', () => {
-            hideLoadingModal();
-            console.log('Upload dibatalkan oleh pengguna.');
-        });
-
-        currentXHR.send(formData);
-    });
-
-    // Cancel Button Click
-    btnCancelUpload.addEventListener('click', () => {
-        if (currentXHR) {
-            currentXHR.abort();
-            currentXHR = null;
-        }
-    });
-
-    // Helper functions for Loading Modal UI
-    function showLoadingModal(fileCount) {
-        progressBar.style.width = '0%';
-        progressText.textContent = '0% Selesai';
-        progressFiles.textContent = `0 dari ${fileCount} Berkas`;
-        modalLoading.classList.add('show');
-    }
-
-    function updateProgressBar(percentage, text) {
-        progressBar.style.width = `${percentage}%`;
-        progressText.textContent = `${percentage}% Selesai`;
-        if (percentage >= 80 && percentage < 100) {
-            loadingTitle.textContent = "Memproses Dokumen";
-            loadingSubtitle.textContent = "Server sedang memvalidasi format teks berkas...";
-        } else {
-            loadingTitle.textContent = "Mengunggah Dokumen";
-            loadingSubtitle.textContent = text;
-        }
-    }
-
-    function hideLoadingModal() {
-        modalLoading.classList.remove('show');
-        currentXHR = null;
-    }
-
-    // --- 4. Threshold Config Modal Handlers ---
-
-    function showThresholdModal() {
-        // Reset slider ke default 70%
-        thresholdSlider.value = 0.70;
-        updateThresholdUI(0.70);
-        modalThreshold.classList.add('show');
-    }
-
-    function hideThresholdModal() {
-        modalThreshold.classList.remove('show');
-    }
-
-    // Back to upload button inside threshold modal
-    btnBackToUpload.addEventListener('click', () => {
-        hideThresholdModal();
-    });
-
-    // Update threshold UI & Description based on slider value
-    thresholdSlider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        updateThresholdUI(val);
-    });
-
-    function updateThresholdUI(value) {
-        const percentage = Math.round(value * 100);
-        thresholdVal.textContent = percentage;
-
-        // Reset classes
-        thresholdCard.className = 'threshold-info-card';
-        
-        if (value < 0.50) {
-            // Low Threshold
-            thresholdCard.classList.add('low');
-            thresholdTitleDesc.textContent = "Kemiripan Topik Umum";
-            thresholdBodyDesc.textContent = "Menyaring kemiripan kosa kata yang umum. Hasil klaster kemungkinan besar dan kurang spesifik (banyak false positive).";
-        } else if (value >= 0.50 && value <= 0.70) {
-            // Medium Threshold
-            thresholdCard.classList.add('medium');
-            thresholdTitleDesc.textContent = "Plagiarisme Sedang / Parafrasa Ringan";
-            thresholdBodyDesc.textContent = "Mendeteksi kemiripan kalimat dengan struktur parafrasa moderat. Cocok untuk deteksi kecurangan tugas esai reguler.";
-        } else {
-            // High Threshold
-            thresholdCard.classList.add('high');
-            thresholdTitleDesc.textContent = "Plagiarisme Berat / Duplikasi Tinggi";
-            thresholdBodyDesc.textContent = "Hanya mendeteksi kemiripan substansi sangat tinggi atau penyalinan murni (copy-paste langsung tanpa parafrasa berarti).";
-        }
-    }
-
-    // --- 5. Final Process Trigger (Dummy Next Page) ---
-
-    btnStartAnalysis.addEventListener('click', () => {
-        const threshold = thresholdSlider.value;
-        const sessionId = dummySessionInput.value;
-
-        // Kirim trigger pemrosesan ke backend
-        fetch('/process-analysis-dummy', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                threshold: threshold,
-                session_id: sessionId
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log('Dummy Analysis Result:', data);
-            
-            // Simulasikan masuk ke halaman hasil dengan mengirimkan data dummy lewat alert
-            alert(`
-=========================================
-      SIMULASI HASIL KLASTERISASI SBERT
-=========================================
-Mata Kuliah: ${mataKuliahInput.value}
-Kelas: ${kelasInput.value}
-Threshold: ${Math.round(data.threshold * 100)}%
-Sesi ID: ${data.session_id}
-
-Hasil Pengelompokan:
-- Klaster 1 (3 Dokumen Mirip):
-  * ${data.clusters[0].join('\n  * ')}
-- Klaster 2 (2 Dokumen Mirip):
-  * ${data.clusters[1].join('\n  * ')}
-
-Dokumen Unik / Aman (Outliers):
-* ${data.outliers.join('\n* ')}
-=========================================
-Tampilan frontend sudah 100% benar dan interaktif!
-            `);
-            hideThresholdModal();
-        })
-        .catch(err => {
-            alert('Gagal memulai analisis.');
-            console.error(err);
-        });
-    });
-});
+})();

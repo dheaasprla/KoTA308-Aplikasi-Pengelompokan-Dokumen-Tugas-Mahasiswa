@@ -1,0 +1,33 @@
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<!-- File: templates/sidebar.html -->
+<!-- Cara pakai di template lain: include 'sidebar.html' -->
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<button class="hamburger-fixed" id="hamburgerFixed">
+    <i class="fa-solid fa-bars"></i>
+</button>
+
+<aside class="sidebar" id="sidebar">
+    <button class="menu-btn" id="menuBtn">
+        <i class="fa-solid fa-bars"></i> Menu
+    </button>
+    <hr class="sidebar-divider" />
+    <a href="{{ url_for('index') }}" class="nav-link {% if active_page == 'unggah' %}active{% endif %}">
+        <i class="fa-solid fa-file-arrow-up"></i> Unggah Dokumen
+    </a>
+    <a href="{{ url_for('hasil_klaster') if 'hasil_klaster' in url_map else '#' }}"
+        class="nav-link {% if active_page == 'klaster' %}active{% endif %}">
+        <i class="fa-solid fa-circle-nodes"></i> Hasil Klaster
+    </a>
+    <a href="#" class="nav-link {% if active_page == 'riwayat' %}active{% endif %}">
+        <i class="fa-solid fa-clock-rotate-left"></i> Riwayat
+    </a>
+    <div class="sidebar-user">
+        <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="user-detail">
+            <div class="user-name">Jhon Doe</div>
+            <div class="user-email">jhondoe@gmail.com</div>
+        </div>
+    </div>
+</aside>
