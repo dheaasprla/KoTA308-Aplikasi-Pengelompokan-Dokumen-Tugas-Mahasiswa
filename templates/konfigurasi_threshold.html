@@ -1,0 +1,233 @@
+<!-- CSS Internal untuk Modal Konfigurasi Threshold -->
+<style>
+    .modal-backdrop {
+        display: none; /* Tersembunyi secara default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6); /* Layar belakang menggelap, bukan ngeblur */
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop.show {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-card {
+        background-color: #ffffff;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        padding: 40px; /* Spacious padding */
+        position: relative;
+        transform: scale(0.92);
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-backdrop.show .modal-card {
+        transform: scale(1);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .modal-header h2 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #03254C; /* Dark Navy */
+    }
+
+    .btn-close-modal {
+        background: none;
+        border: none;
+        color: #EF4444; /* Merah */
+        font-size: 20px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-close-modal:hover {
+        transform: scale(1.25);
+    }
+
+    .modal-description {
+        font-size: 13px;
+        color: #94A3B8; /* Grey text from mockup */
+        line-height: 1.6;
+        margin-bottom: 32px;
+        text-align: left; /* Rata kiri sesuai request */
+        font-weight: 500;
+    }
+
+    .threshold-control-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 36px;
+        width: 100%;
+        padding: 0 8px;
+    }
+
+    .premium-slider {
+        flex-grow: 1;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 10px; /* Lebih tebal agar menyerupai kotak panjang */
+        border-radius: 5px;
+        background: #E2E8F0; /* Latar belakang abu track */
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15); /* Bayangan abu ke dalam (inset shadow) */
+        outline: none;
+    }
+
+    .premium-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 6px;
+        height: 18px; /* Lebih tinggi dari track */
+        background-color: #03254C; /* Navy handle */
+        border-radius: 2px;
+        cursor: pointer;
+        border: none;
+    }
+
+    .threshold-display {
+        font-size: 13px;
+        font-weight: 700;
+        color: #000000;
+        min-width: 40px;
+        text-align: left;
+    }
+
+    .modal-actions-center {
+        display: flex;
+        justify-content: center;
+    }
+
+    .btn-submit-analysis {
+        background-color: #03254C;
+        color: #ffffff;
+        border: none;
+        padding: 10px 24px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 20px; /* Pill shape */
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .btn-submit-analysis:hover {
+        background-color: #021a36;
+    }
+</style>
+
+<!-- ═══════════ MODAL: KONFIGURASI THRESHOLD ═══════════ -->
+<div class="modal-backdrop" id="modal-threshold">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Kofigurasi Treshold Kemiripan</h2>
+            <button type="button" class="btn-close-modal" id="btn-close-modal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-description">
+                Tentukan batas minimum persentase kemiripan untuk mendeteksi duplikasi dokumen. 
+                Sistem menggunakan threshold default 70%, yang dapat diubah sebelum analisis dimulai.
+            </p>
+            
+            <form action="/hasil-klaster" method="POST" id="form-threshold">
+                <div class="threshold-control-row">
+                    <input type="range" name="threshold" id="input-threshold" min="0" max="100" value="{{ (threshold * 100)|int if threshold is defined else 70 }}" class="premium-slider">
+                    <div class="threshold-display">
+                        <span id="threshold-display-val">{{ (threshold * 100)|int if threshold is defined else 70 }}</span>%
+                    </div>
+                </div>
+                
+                <div class="modal-actions-center">
+                    <button type="submit" class="btn-submit-analysis">
+                        Mulai Analisis
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ MODAL INTERACTION JAVASCRIPT ═══════════ -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalBackdrop = document.getElementById('modal-threshold');
+        const btnReanalyze = document.getElementById('btn-reanalyze');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const inputThreshold = document.getElementById('input-threshold');
+        const thresholdDisplayVal = document.getElementById('threshold-display-val');
+
+        // Buka modal saat menekan tombol "Analisis Ulang"
+        if (btnReanalyze) {
+            btnReanalyze.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                // Rotasi ikon refresh di dalam tombol secara dinamis
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.classList.add('fa-spin');
+                    // Berhentikan putaran ikon setelah modal terbuka penuh
+                    setTimeout(() => {
+                        icon.classList.remove('fa-spin');
+                    }, 500);
+                }
+
+                // Tampilkan backdrop modal
+                modalBackdrop.style.display = 'flex';
+                setTimeout(() => {
+                    modalBackdrop.classList.add('show');
+                }, 10);
+            });
+        }
+
+        // Tutup modal saat mengklik tombol X merah
+        if (btnCloseModal) {
+            btnCloseModal.addEventListener('click', closeModal);
+        }
+
+        // Tutup modal saat mengklik area di luar modal-card (backdrop)
+        if (modalBackdrop) {
+            modalBackdrop.addEventListener('click', function (e) {
+                if (e.target === modalBackdrop) {
+                    closeModal();
+                }
+            });
+        }
+
+        function closeModal() {
+            modalBackdrop.classList.remove('show');
+            setTimeout(() => {
+                modalBackdrop.style.display = 'none';
+            }, 250);
+        }
+
+        // Hubungkan input range slider ke tampilan persentase real-time
+        if (inputThreshold && thresholdDisplayVal) {
+            inputThreshold.addEventListener('input', function () {
+                thresholdDisplayVal.textContent = this.value;
+            });
+        }
+    });
+</script>
