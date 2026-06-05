@@ -2,1077 +2,906 @@
 <html lang="id">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KoTA-308 | Unggah Dokumen</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <style>
-    :root {
-      --navy: #03254C;
-      --bg: #EAEBEF;
-      --card-white: #F9FBFC;
-      --warn-fill: #FFD79F;
-      --warn-stroke: #FFA62B;
-      --warn-text: #412E27;
-      --red: #B00505;
-      --black: #000000;
-      --input-bg: #E4E6ED;
-      --sidebar-w: 220px;
-    }
-
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      display: flex;
-      min-height: 100vh;
-      color: var(--black);
-    }
-
-    /* ══ SIDEBAR ══ */
-    .sidebar {
-      width: var(--sidebar-w);
-      background: var(--navy);
-      display: flex;
-      flex-direction: column;
-      padding: 20px 14px 18px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      z-index: 200;
-      transform: translateX(0);
-      transition: transform 0.25s ease;
-      overflow: hidden;
-    }
-
-    .sidebar.collapsed {
-      transform: translateX(-100%);
-    }
-
-    .sidebar-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.35);
-      z-index: 199;
-    }
-
-    .sidebar-overlay.active {
-      display: block;
-    }
-
-    .hamburger-fixed {
-      position: fixed;
-      top: 18px;
-      left: 16px;
-      z-index: 198;
-      background: var(--navy);
-      border: none;
-      color: #fff;
-      font-size: 18px;
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      cursor: pointer;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.15s;
-    }
-
-    .hamburger-fixed.show {
-      display: flex;
-    }
-
-    .hamburger-fixed:hover {
-      opacity: 0.85;
-    }
-
-    .menu-btn {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: none;
-      border: none;
-      color: #fff;
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      padding: 4px 6px;
-      margin-bottom: 16px;
-      white-space: nowrap;
-    }
-
-    .menu-btn i {
-      font-size: 18px;
-    }
-
-    .sidebar-divider {
-      border: none;
-      border-top: 1px solid rgba(255, 255, 255, 0.18);
-      margin-bottom: 16px;
-    }
-
-    .nav-link {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      padding: 10px 12px;
-      border-radius: 9px;
-      color: rgba(255, 255, 255, 0.60);
-      font-size: 13px;
-      font-weight: 400;
-      text-decoration: none;
-      margin-bottom: 3px;
-      transition: background 0.15s, color 0.15s;
-      white-space: nowrap;
-    }
-
-    .nav-link i {
-      width: 18px;
-      text-align: center;
-      font-size: 14px;
-    }
-
-    .nav-link:hover {
-      background: rgba(255, 255, 255, 0.09);
-      color: #fff;
-    }
-
-    .nav-link.active {
-      background: rgba(255, 255, 255, 0.15);
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .sidebar-user {
-      margin-top: auto;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border: 1.5px solid rgba(255, 255, 255, 0.22);
-      border-radius: 10px;
-      padding: 9px 10px;
-    }
-
-    .user-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.14);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 16px;
-      flex-shrink: 0;
-      border: 1.5px solid rgba(255, 255, 255, 0.30);
-    }
-
-    .user-detail {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .user-name {
-      color: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      line-height: 1.3;
-    }
-
-    .user-email {
-      color: rgba(255, 255, 255, 0.50);
-      font-size: 11px;
-      font-weight: 300;
-    }
-
-    /* ══ MAIN ══ */
-    .main {
-      margin-left: var(--sidebar-w);
-      flex: 1;
-      padding: 30px 30px 36px;
-      transition: margin-left 0.25s ease;
-    }
-
-    .main.expanded {
-      margin-left: 0;
-      padding-left: 64px;
-    }
-
-    .page-title {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--black);
-      margin-bottom: 4px;
-    }
-
-    .page-subtitle {
-      font-size: 13px;
-      font-weight: 300;
-      color: #666;
-      margin-bottom: 18px;
-    }
-
-    /* ══ ALERT ══ */
-    .alert {
-      background: var(--warn-fill);
-      border: 1px solid var(--warn-stroke);
-      border-radius: 8px;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      color: var(--warn-text);
-      margin-bottom: 20px;
-    }
-
-    .alert i {
-      color: var(--warn-text);
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    /* ══ TOP GRID ══ */
-    .top-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 16px;
-      align-items: start;
-    }
-
-    .left-col {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .right-col {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    /* ══ CARD INFORMASI ══ */
-    .card {
-      background: var(--card-white);
-      border-radius: 14px;
-      padding: 22px 22px 20px;
-      border: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .card-title {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--black);
-      margin-bottom: 3px;
-    }
-
-    .card-subtitle {
-      font-size: 12px;
-      font-weight: 300;
-      color: #888;
-      margin-bottom: 18px;
-    }
-
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    .form-group:last-child {
-      margin-bottom: 0;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--black);
-      margin-bottom: 7px;
-    }
-
-    .form-group input[type="text"] {
-      width: 100%;
-      background: var(--input-bg);
-      border: none;
-      border-radius: 8px;
-      padding: 11px 13px;
-      font-family: 'Inter', sans-serif;
-      font-size: 13.5px;
-      font-weight: 300;
-      color: var(--black);
-      outline: none;
-      transition: box-shadow 0.15s;
-    }
-
-    .form-group input[type="text"]:focus {
-      box-shadow: 0 0 0 2px var(--navy);
-    }
-
-    /* ══ QUOTA CARD + DONUT ══ */
-    .quota-card {
-      background: #F6F3F1;
-      border-radius: 14px;
-      padding: 18px 22px 22px;
-      border: 1.5px solid #F2C4A5;
-      transition: background 0.4s ease, border-color 0.4s ease;
-    }
-
-    .quota-card.warn {
-      background: #F6F3F1;
-      border: 1.5px solid #F2C4A5;
-    }
-
-    .quota-card.warn .quota-pct,
-    .quota-card.warn .donut-count,
-    .quota-card.warn .donut-sub,
-    .quota-card.warn .qs-label,
-    .quota-card.warn .qs-value,
-    .quota-card.warn .qs-icon {
-      color: var(--red);
-    }
-
-    .quota-head {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 16px;
-    }
-
-    .quota-body {
-      display: flex;
-      align-items: center;
-      gap: 22px;
-    }
-
-    .donut-wrap {
-      position: relative;
-      width: 120px;
-      height: 120px;
-      flex-shrink: 0;
-    }
-
-    .donut-svg {
-      width: 120px;
-      height: 120px;
-      display: block;
-      transform: rotate(-90deg);
-    }
-
-    .donut-label {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
-
-    .donut-count {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--navy);
-      line-height: 1.1;
-    }
-
-    .donut-sub {
-      font-size: 9px;
-      font-weight: 300;
-      color: var(--navy);
-      line-height: 1.3;
-      text-align: center;
-    }
-
-    .quota-right {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .quota-pct {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--navy);
-    }
-
-    .quota-track {
-      height: 10px;
-      background: #d6d8e0;
-      border-radius: 99px;
-      overflow: hidden;
-    }
-
-    .quota-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 99px;
-      transition: width 0.4s ease, background 0.4s ease;
-    }
-
-    .quota-stats {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .quota-stat-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .qs-icon {
-      color: var(--navy);
-      font-size: 22px;
-      width: 24px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .qs-label {
-      font-size: 11px;
-      font-weight: 300;
-      color: var(--navy);
-      line-height: 1.2;
-    }
-
-    .qs-value {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--navy);
-      line-height: 1.3;
-    }
-
-    /* ══ UPLOAD ZONE ══ */
-    .upload-zone {
-      border: 2.5px dashed var(--navy);
-      border-radius: 14px;
-      background: var(--card-white);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 44px 24px 40px;
-      cursor: pointer;
-      text-align: center;
-      min-height: 280px;
-      transition: background 0.15s;
-    }
-
-    .upload-zone:hover,
-    .upload-zone.drag {
-      background: #e8edf5;
-    }
-
-    .cloud-icon {
-      color: var(--navy);
-      font-size: 64px;
-      margin-bottom: 16px;
-      line-height: 1;
-    }
-
-    .upload-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 4px;
-    }
-
-    .upload-sub {
-      font-size: 12px;
-      font-weight: 300;
-      color: var(--navy);
-      margin-bottom: 22px;
-    }
-
-    .btn-select {
-      background: var(--navy);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 11px 32px;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s;
-      position: relative;
-      z-index: 2;
-    }
-
-    .btn-select:hover {
-      opacity: 0.83;
-    }
-
-    /* ══ BATASAN SISTEM ══ */
-    .warn-card {
-      background: var(--warn-fill);
-      border: 1px solid var(--warn-stroke);
-      border-radius: 14px;
-      padding: 16px 20px;
-    }
-
-    .warn-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--warn-text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .warn-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    .warn-list li {
-      font-size: 13px;
-      color: var(--warn-text);
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      line-height: 1.4;
-    }
-
-    .warn-list li i {
-      color: var(--warn-text);
-      margin-top: 2px;
-      flex-shrink: 0;
-      font-size: 13px;
-    }
-
-    /* ══ BERKAS TERUNGGAH ══ */
-    .files-section {
-      background: #ffffff;
-      border-radius: 16px;
-      border: 2px solid #90BBF5;
-      padding: 20px 22px 22px;
-      margin-bottom: 20px;
-    }
-
-    .files-header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .files-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--black);
-    }
-
-    .btn-clear-all {
-      background: none;
-      border: 1.5px solid var(--red);
-      color: var(--red);
-      border-radius: 7px;
-      padding: 5px 14px;
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.15s;
-    }
-
-    .btn-clear-all:hover {
-      background: #fff0f0;
-    }
-
-    .files-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-    }
-
-    .file-item {
-      background: #fff;
-      border: 1.5px solid #D0D8E8;
-      border-radius: 10px;
-      padding: 11px 12px;
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      min-width: 0;
-      transition: border-color 0.15s;
-    }
-
-    .file-item:hover {
-      border-color: var(--navy);
-    }
-
-    .fi-icon {
-      color: var(--navy);
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-
-    .fi-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .fi-name {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--navy);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 1.4;
-    }
-
-    .fi-size {
-      font-size: 11px;
-      font-weight: 300;
-      color: #888;
-      margin-top: 1px;
-    }
-
-    .fi-del {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--navy);
-      font-size: 14px;
-      padding: 5px 6px;
-      border-radius: 6px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.15s, color 0.15s;
-    }
-
-    .fi-del:hover {
-      background: #fce8e8;
-      color: var(--red);
-    }
-
-    /* ══ FOOTER ══ */
-    .footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 14px;
-    }
-
-    .btn-cancel {
-      background: #fff;
-      color: var(--red);
-      border: 2px solid var(--red);
-      border-radius: 10px;
-      padding: 12px 40px;
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .btn-cancel:hover {
-      background: #fff2f2;
-    }
-
-    .btn-next {
-      background: var(--navy);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 12px 40px;
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-
-    .btn-next:hover {
-      opacity: 0.85;
-    }
-
-    .btn-next:disabled {
-      opacity: 0.40;
-      cursor: not-allowed;
-    }
-
-    /* ══ MODAL BACKDROP ══ */
-    .modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-backdrop.active {
-      display: flex;
-    }
-
-    /* ══ MODAL UPLOAD ══ */
-    .modal-upload {
-      background: #fff;
-      border-radius: 16px;
-      padding: 32px 32px 28px;
-      width: 460px;
-      max-width: 92vw;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
-    }
-
-    .modal-upload-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-
-    .modal-upload-title {
-      font-family: 'Inter', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--navy);
-    }
-
-    .modal-close-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #D81010;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4px;
-      border-radius: 6px;
-      transition: background 0.15s;
-    }
-
-    .modal-close-btn:hover {
-      background: #fce8e8;
-    }
-
-    .modal-rotate-icon {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .modal-rotate-icon i {
-      font-size: 52px;
-      color: var(--navy);
-      animation: spin 1.2s linear infinite;
-    }
-
-    @keyframes spin {
-      from {
-        transform: rotate(0deg);
-      }
-
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .modal-proc-text {
-      text-align: center;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 400;
-      color: #6D7E91;
-      margin-bottom: 16px;
-    }
-
-    .upload-progress-wrap {
-      background: #EAEBEF;
-      border-radius: 99px;
-      height: 10px;
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
-
-    .upload-progress-bar {
-      height: 100%;
-      width: 0%;
-      background: #FFA62B;
-      border-radius: 99px;
-      transition: width 0.3s ease;
-    }
-
-    .upload-pct-label {
-      text-align: right;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--black);
-      margin-bottom: 24px;
-    }
-
-    .btn-batal-unggah {
-      width: 100%;
-      background: none;
-      border: 2px solid #D81010;
-      color: #D81010;
-      border-radius: 15px;
-      padding: 12px;
-      font-family: 'Inter', sans-serif;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .btn-batal-unggah:hover {
-      background: #fff0f0;
-    }
-
-    /* ══ MODAL THRESHOLD ══ */
-    .modal-threshold-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 32px 32px 28px;
-      width: 480px;
-      max-width: 92vw;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
-    }
-
-    .modal-threshold-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .modal-threshold-title {
-      font-family: 'Inter', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--navy);
-    }
-
-    .modal-threshold-desc {
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 400;
-      color: #6D7E91;
-      line-height: 1.6;
-      margin-bottom: 28px;
-    }
-
-    .threshold-slider-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 28px;
-    }
-
-    .threshold-range {
-      flex: 1;
-      accent-color: var(--navy);
-      cursor: pointer;
-      height: 6px;
-    }
-
-    .threshold-pct-badge {
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--navy);
-      min-width: 46px;
-      text-align: right;
-    }
-
-    .btn-mulai-analisis {
-      width: 100%;
-      background: #1C3B87;
-      border: 1px solid #202B65;
-      box-shadow: inset 0 0 0 1px #202B65;
-      color: #FFFFFF;
-      border-radius: 10px;
-      padding: 13px;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-
-    .btn-mulai-analisis:hover {
-      opacity: 0.88;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KoTA-308 | Unggah Dokumen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}" />
+    <style>
+        :root {
+            --navy: #03254C;
+            --bg: #EAEBEF;
+            --card-white: #F9FBFC;
+            --warn-fill: #FFD79F;
+            --warn-stroke: #FFA62B;
+            --warn-text: #412E27;
+            --red: #B00505;
+            --black: #000000;
+            --input-bg: #E4E6ED;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            display: flex;
+            min-height: 100vh;
+            color: var(--black);
+        }
+
+        /* ══ MAIN ══ */
+        .main {
+            flex: 1;
+            padding: 30px 30px 36px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 4px;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            font-weight: 300;
+            color: #666;
+            margin-bottom: 18px;
+        }
+
+        /* ══ ALERT ══ */
+        .alert {
+            background: var(--warn-fill);
+            border: 1px solid var(--warn-stroke);
+            border-radius: 8px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--warn-text);
+            margin-bottom: 20px;
+        }
+
+        .alert i {
+            color: var(--warn-text);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        /* ══ TOP GRID ══ */
+        .top-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+            align-items: start;
+        }
+
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* ══ CARD INFORMASI ══ */
+        .card {
+            background: var(--card-white);
+            border-radius: 14px;
+            padding: 22px 22px 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 3px;
+        }
+
+        .card-subtitle {
+            font-size: 12px;
+            font-weight: 300;
+            color: #888;
+            margin-bottom: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 7px;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            background: var(--input-bg);
+            border: none;
+            border-radius: 8px;
+            padding: 11px 13px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13.5px;
+            font-weight: 300;
+            color: var(--black);
+            outline: none;
+            transition: box-shadow 0.15s;
+        }
+
+        .form-group input[type="text"]:focus {
+            box-shadow: 0 0 0 2px var(--navy);
+        }
+
+        /* ══ QUOTA CARD + DONUT ══ */
+        .quota-card {
+            background: #F6F3F1;
+            border-radius: 14px;
+            padding: 18px 22px 22px;
+            border: 1.5px solid #F2C4A5;
+            transition: background 0.4s ease, border-color 0.4s ease;
+        }
+
+        .quota-card.warn {
+            background: #F6F3F1;
+            border: 1.5px solid #F2C4A5;
+        }
+
+        .quota-card.warn .quota-pct,
+        .quota-card.warn .donut-count,
+        .quota-card.warn .donut-sub,
+        .quota-card.warn .qs-label,
+        .quota-card.warn .qs-value,
+        .quota-card.warn .qs-icon {
+            color: var(--red);
+        }
+
+        .quota-head {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 16px;
+        }
+
+        .quota-body {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .donut-wrap {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            flex-shrink: 0;
+        }
+
+        .donut-svg {
+            width: 120px;
+            height: 120px;
+            display: block;
+            transform: rotate(-90deg);
+        }
+
+        .donut-label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .donut-count {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--navy);
+            line-height: 1.1;
+        }
+
+        .donut-sub {
+            font-size: 9px;
+            font-weight: 300;
+            color: var(--navy);
+            line-height: 1.3;
+            text-align: center;
+        }
+
+        .quota-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quota-pct {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .quota-track {
+            height: 10px;
+            background: #d6d8e0;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .quota-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 99px;
+            transition: width 0.4s ease, background 0.4s ease;
+        }
+
+        .quota-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quota-stat-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qs-icon {
+            color: var(--navy);
+            font-size: 22px;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .qs-label {
+            font-size: 11px;
+            font-weight: 300;
+            color: var(--navy);
+            line-height: 1.2;
+        }
+
+        .qs-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--navy);
+            line-height: 1.3;
+        }
+
+        /* ══ UPLOAD ZONE ══ */
+        .upload-zone {
+            border: 2.5px dashed var(--navy);
+            border-radius: 14px;
+            background: var(--card-white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 44px 24px 40px;
+            cursor: pointer;
+            text-align: center;
+            min-height: 280px;
+            transition: background 0.15s;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag {
+            background: #e8edf5;
+        }
+
+        .cloud-icon {
+            color: var(--navy);
+            font-size: 64px;
+            margin-bottom: 16px;
+            line-height: 1;
+        }
+
+        .upload-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 4px;
+        }
+
+        .upload-sub {
+            font-size: 12px;
+            font-weight: 300;
+            color: var(--navy);
+            margin-bottom: 22px;
+        }
+
+        .btn-select {
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 32px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn-select:hover {
+            opacity: 0.83;
+        }
+
+        /* ══ BATASAN SISTEM ══ */
+        .warn-card {
+            background: var(--warn-fill);
+            border: 1px solid var(--warn-stroke);
+            border-radius: 14px;
+            padding: 16px 20px;
+        }
+
+        .warn-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--warn-text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .warn-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .warn-list li {
+            font-size: 13px;
+            color: var(--warn-text);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            line-height: 1.4;
+        }
+
+        .warn-list li i {
+            color: var(--warn-text);
+            margin-top: 2px;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+
+        /* ══ BERKAS TERUNGGAH ══ */
+        .files-section {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 2px solid #90BBF5;
+            padding: 20px 22px 22px;
+            margin-bottom: 20px;
+        }
+
+        .files-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .files-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--black);
+        }
+
+        .btn-clear-all {
+            background: none;
+            border: 1.5px solid var(--red);
+            color: var(--red);
+            border-radius: 7px;
+            padding: 5px 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s;
+        }
+
+        .btn-clear-all:hover {
+            background: #fff0f0;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .file-item {
+            background: #fff;
+            border: 1.5px solid #D0D8E8;
+            border-radius: 10px;
+            padding: 11px 12px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+            transition: border-color 0.15s;
+        }
+
+        .file-item:hover {
+            border-color: var(--navy);
+        }
+
+        .fi-icon {
+            color: var(--navy);
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .fi-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .fi-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--navy);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+        }
+
+        .fi-size {
+            font-size: 11px;
+            font-weight: 300;
+            color: #888;
+            margin-top: 1px;
+        }
+
+        .fi-del {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--navy);
+            font-size: 14px;
+            padding: 5px 6px;
+            border-radius: 6px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .fi-del:hover {
+            background: #fce8e8;
+            color: var(--red);
+        }
+
+        /* ══ FOOTER ══ */
+        .footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 14px;
+        }
+
+        .btn-cancel {
+            background: #fff;
+            color: var(--red);
+            border: 2px solid var(--red);
+            border-radius: 10px;
+            padding: 12px 40px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-cancel:hover {
+            background: #fff2f2;
+        }
+
+        .btn-next {
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 40px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .btn-next:hover {
+            opacity: 0.85;
+        }
+
+        .btn-next:disabled {
+            opacity: 0.40;
+            cursor: not-allowed;
+        }
+
+        /* ══ MODAL BACKDROP ══ */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        /* ══ MODAL UPLOAD ══ */
+        .modal-upload {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px 32px 28px;
+            width: 460px;
+            max-width: 92vw;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+        }
+
+        .modal-upload-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .modal-upload-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #D81010;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+
+        .modal-close-btn:hover {
+            background: #fce8e8;
+        }
+
+        .modal-rotate-icon {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-rotate-icon i {
+            font-size: 52px;
+            color: var(--navy);
+            animation: spin 1.2s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .modal-proc-text {
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            color: #6D7E91;
+            margin-bottom: 16px;
+        }
+
+        .upload-progress-wrap {
+            background: #EAEBEF;
+            border-radius: 99px;
+            height: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .upload-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #FFA62B;
+            border-radius: 99px;
+            transition: width 0.3s ease;
+        }
+
+        .upload-pct-label {
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 24px;
+        }
+
+        .btn-batal-unggah {
+            width: 100%;
+            background: none;
+            border: 2px solid #D81010;
+            color: #D81010;
+            border-radius: 15px;
+            padding: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-batal-unggah:hover {
+            background: #fff0f0;
+        }
+
+        /* ══ MODAL THRESHOLD ══ */
+        .modal-threshold-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px 32px 28px;
+            width: 480px;
+            max-width: 92vw;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+        }
+
+        .modal-threshold-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-threshold-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .modal-threshold-desc {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            color: #6D7E91;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .threshold-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .threshold-range {
+            flex: 1;
+            accent-color: var(--navy);
+            cursor: pointer;
+            height: 6px;
+        }
+
+        .threshold-pct-badge {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--navy);
+            min-width: 46px;
+            text-align: right;
+        }
+
+        .btn-mulai-analisis {
+            width: 100%;
+            background: #1C3B87;
+            border: 1px solid #202B65;
+            box-shadow: inset 0 0 0 1px #202B65;
+            color: #FFFFFF;
+            border-radius: 10px;
+            padding: 13px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .btn-mulai-analisis:hover {
+            opacity: 0.88;
+        }
+    </style>
 </head>
 
 <body>
 
-  <!-- ═══════════ SIDEBAR (partial) ═══════════ -->
-  {% include 'sidebar.html' %}
+    <!-- ═══════════ SIDEBAR (partial) ═══════════ -->
+    {% set active_page = 'unggah' %}
+    {% include 'sidebar.html' %}
 
-  <!-- ═══════════ MAIN ═══════════ -->
-  <main class="main" id="mainContent">
-    <h1 class="page-title">Unggah Dokumen</h1>
-    <p class="page-subtitle">Isi detail sesi dan unggah berkas tugas mahasiswa (.pdf)</p>
+    <!-- ═══════════ MAIN ═══════════ -->
+    <main class="main" id="mainContent">
+        <h1 class="page-title">Unggah Dokumen</h1>
+        <p class="page-subtitle">Isi detail sesi dan unggah berkas tugas mahasiswa (.pdf)</p>
 
-    <div class="alert">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      Sesi aktif saat ini akan terhapus jika analisis baru dimulai. Unduh laporan terlebih dahulu jika dibutuhkan.
-    </div>
-
-    <div class="top-grid">
-      <div class="left-col">
-        <div class="card">
-          <div class="card-title">Informasi Sesi Baru</div>
-          <div class="card-subtitle">Hanya isi nama mata kuliah, kelas, dan threshold</div>
-          <div class="form-group">
-            <label for="mata_kuliah">Nama Mata Kuliah</label>
-            <input type="text" id="mata_kuliah" name="mata_kuliah" autocomplete="off">
-          </div>
-          <div class="form-group">
-            <label for="kelas">Kelas</label>
-            <input type="text" id="kelas" name="kelas" autocomplete="off">
-          </div>
+        <div class="alert">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Sesi aktif saat ini akan terhapus jika analisis baru dimulai. Unduh laporan terlebih dahulu jika dibutuhkan.
         </div>
 
-        <div class="quota-card" id="quotaCard">
-          <div class="quota-head">Status Kuota</div>
-          <div class="quota-body">
-            <div class="donut-wrap">
-              <svg class="donut-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="60" cy="60" r="48" fill="none" stroke="#E0E2EA" stroke-width="13" />
-                <circle id="donut-arc" cx="60" cy="60" r="48" />
-              </svg>
-              <div class="donut-label">
-                <span class="donut-count" id="donut-count">0/32</span>
-                <span class="donut-sub">File<br>Terunggah</span>
-              </div>
-            </div>
-            <div class="quota-right">
-              <div class="quota-pct" id="quota-pct">0% dari kuota digunakan</div>
-              <div class="quota-track">
-                <div class="quota-fill" id="quota-fill"></div>
-              </div>
-              <div class="quota-stats">
-                <div class="quota-stat-row">
-                  <div class="qs-icon"><i class="fa-solid fa-file-lines"></i></div>
-                  <div class="qs-text">
-                    <div class="qs-label">Ukuran Terpakai</div>
-                    <div class="qs-value" id="quota-size-used">0MB/200MB</div>
-                  </div>
+        <div class="top-grid">
+            <div class="left-col">
+                <div class="card">
+                    <div class="card-title">Informasi Sesi Baru</div>
+                    <div class="card-subtitle">Hanya isi nama mata kuliah, kelas, dan threshold</div>
+                    <div class="form-group">
+                        <label for="mata_kuliah">Nama Mata Kuliah</label>
+                        <input type="text" id="mata_kuliah" name="mata_kuliah" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="kelas">Kelas</label>
+                        <input type="text" id="kelas" name="kelas" autocomplete="off">
+                    </div>
                 </div>
-                <div class="quota-stat-row">
-                  <div class="qs-icon"><i class="fa-solid fa-file-lines"></i></div>
-                  <div class="qs-text">
-                    <div class="qs-label">Sisa Kuota Ukuran</div>
-                    <div class="qs-value" id="quota-size-rem">200MB</div>
-                  </div>
+
+                <div class="quota-card" id="quotaCard">
+                    <div class="quota-head">Status Kuota</div>
+                    <div class="quota-body">
+                        <div class="donut-wrap">
+                            <svg class="donut-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="60" cy="60" r="48" fill="none" stroke="#E0E2EA" stroke-width="13" />
+                                <circle id="donut-arc" cx="60" cy="60" r="48" />
+                            </svg>
+                            <div class="donut-label">
+                                <span class="donut-count" id="donut-count">0/32</span>
+                                <span class="donut-sub">File<br>Terunggah</span>
+                            </div>
+                        </div>
+                        <div class="quota-right">
+                            <div class="quota-pct" id="quota-pct">0% dari kuota digunakan</div>
+                            <div class="quota-track">
+                                <div class="quota-fill" id="quota-fill"></div>
+                            </div>
+                            <div class="quota-stats">
+                                <div class="quota-stat-row">
+                                    <div class="qs-icon"><i class="fa-solid fa-file-lines"></i></div>
+                                    <div class="qs-text">
+                                        <div class="qs-label">Ukuran Terpakai</div>
+                                        <div class="qs-value" id="quota-size-used">0MB/200MB</div>
+                                    </div>
+                                </div>
+                                <div class="quota-stat-row">
+                                    <div class="qs-icon"><i class="fa-solid fa-file-lines"></i></div>
+                                    <div class="qs-text">
+                                        <div class="qs-label">Sisa Kuota Ukuran</div>
+                                        <div class="qs-value" id="quota-size-rem">200MB</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
+
+            <div class="right-col">
+                <div class="upload-zone" id="dropZone">
+                    <input type="file" id="hiddenInput" accept=".pdf" multiple style="display:none;">
+                    <i class="fa-solid fa-cloud-arrow-up cloud-icon"></i>
+                    <div class="upload-title">Drag and drop your files here</div>
+                    <div class="upload-sub">PDF formats, up to 50 MB</div>
+                    <button type="button" class="btn-select" id="btn-select-trigger">Select File</button>
+                </div>
+                <div class="warn-card">
+                    <div class="warn-title"><i class="fa-solid fa-triangle-exclamation"></i> Batasan Sistem</div>
+                    <ul class="warn-list">
+                        <li><i class="fa-solid fa-circle-check"></i> Hanya .pdf berbasis teks yang didukung.</li>
+                        <li><i class="fa-solid fa-ban"></i> Tidak mendukung dokumen hasil scan (OCR tidak tersedia).
+                        </li>
+                        <li><i class="fa-solid fa-camera"></i> Gambar di dalam PDF tidak akan dianalisis.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
-      </div>
 
-      <div class="right-col">
-        <div class="upload-zone" id="dropZone">
-          <input type="file" id="hiddenInput" accept=".pdf" multiple style="display:none;">
-          <i class="fa-solid fa-cloud-arrow-up cloud-icon"></i>
-          <div class="upload-title">Drag and drop your files here</div>
-          <div class="upload-sub">PDF formats, up to 50 MB</div>
-          <button type="button" class="btn-select" id="btn-select-trigger">Select File</button>
+        <!-- Grid berkas: tersembunyi sampai file selesai diproses -->
+        <div class="files-section" id="files-section" style="display:none;">
+            <div class="files-header-row">
+                <div class="files-title">Berkas Terunggah</div>
+                <button type="button" class="btn-clear-all" id="btn-clear-all">
+                    <i class="fa-solid fa-trash-can"></i> Hapus Semua
+                </button>
+            </div>
+            <div class="files-grid" id="filesGrid"></div>
         </div>
-        <div class="warn-card">
-          <div class="warn-title"><i class="fa-solid fa-triangle-exclamation"></i> Batasan Sistem</div>
-          <ul class="warn-list">
-            <li><i class="fa-solid fa-circle-check"></i> Hanya .pdf berbasis teks yang didukung.</li>
-            <li><i class="fa-solid fa-ban"></i> Tidak mendukung dokumen hasil scan (OCR tidak tersedia).</li>
-            <li><i class="fa-solid fa-camera"></i> Gambar di dalam PDF tidak akan dianalisis.</li>
-          </ul>
+
+        <div class="footer">
+            <button type="button" class="btn-cancel" id="btn-cancel-form">Batalkan</button>
+            <button type="button" class="btn-next" id="btn-next-step" disabled>Lanjutkan</button>
         </div>
-      </div>
+    </main>
+
+    <!-- ══ MODAL: Mengunggah Dokumen ══ -->
+    <div class="modal-backdrop" id="modal-loading">
+        <div class="modal-upload">
+            <div class="modal-upload-header">
+                <span class="modal-upload-title">Mengunggah Dokumen</span>
+                <button class="modal-close-btn" id="btn-close-upload">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-rotate-icon">
+                <i class="fa-solid fa-rotate"></i>
+            </div>
+            <div class="modal-proc-text">Sedang memproses dokumen anda</div>
+            <div class="upload-progress-wrap">
+                <div class="upload-progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="upload-pct-label"><span id="progress-text">0%</span></div>
+            <button type="button" class="btn-batal-unggah" id="btn-batal-unggah">Batal Unggah</button>
+        </div>
     </div>
 
-    <!-- Grid berkas: tersembunyi sampai file selesai diproses -->
-    <div class="files-section" id="files-section" style="display:none;">
-      <div class="files-header-row">
-        <div class="files-title">Berkas Terunggah</div>
-        <button type="button" class="btn-clear-all" id="btn-clear-all">
-          <i class="fa-solid fa-trash-can"></i> Hapus Semua
-        </button>
-      </div>
-      <div class="files-grid" id="filesGrid"></div>
-    </div>
+    <!-- ══ MODAL: Konfigurasi Threshold ══ -->
+    {% include 'konfigurasi_threshold.html' %}
 
-    <div class="footer">
-      <button type="button" class="btn-cancel" id="btn-cancel-form">Batalkan</button>
-      <button type="button" class="btn-next" id="btn-next-step" disabled>Lanjutkan</button>
-    </div>
-  </main>
-
-  <!-- ══ MODAL: Mengunggah Dokumen ══ -->
-  <div class="modal-backdrop" id="modal-loading">
-    <div class="modal-upload">
-      <div class="modal-upload-header">
-        <span class="modal-upload-title">Mengunggah Dokumen</span>
-        <button class="modal-close-btn" id="btn-close-upload">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <div class="modal-rotate-icon">
-        <i class="fa-solid fa-rotate"></i>
-      </div>
-      <div class="modal-proc-text">Sedang memproses dokumen anda</div>
-      <div class="upload-progress-wrap">
-        <div class="upload-progress-bar" id="progress-bar"></div>
-      </div>
-      <div class="upload-pct-label"><span id="progress-text">0%</span></div>
-      <button type="button" class="btn-batal-unggah" id="btn-batal-unggah">Batal Unggah</button>
-    </div>
-  </div>
-
-  <!-- ══ MODAL: Konfigurasi Threshold ══ -->
-  <div class="modal-backdrop" id="modal-threshold">
-    <div class="modal-threshold-card" id="threshold-modal-body">
-      <!-- Diisi otomatis oleh konfigurasi_threshold.js -->
-    </div>
-  </div>
-
-  <!-- ══ SCRIPTS ══ -->
-  <!-- 1. Sidebar toggle -->
-  <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
-  <!-- 2. Logika threshold modal (harus sebelum unggah_dokumen.js) -->
-  <script src="{{ url_for('static', filename='js/konfigurasi_threshold.js') }}"></script>
-  <!-- 3. Logika utama halaman -->
-  <script src="{{ url_for('static', filename='js/unggah_dokumen.js') }}"></script>
+    <!-- ══ SCRIPTS ══ -->
+    <!-- 1. Sidebar toggle -->
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <!-- 3. Logika utama halaman -->
+    <script src="{{ url_for('static', filename='js/unggah_dokumen.js') }}"></script>
 
 </body>
 

@@ -10,18 +10,18 @@
 
 <aside class="sidebar" id="sidebar">
     <button class="menu-btn" id="menuBtn">
-        <i class="fa-solid fa-bars"></i> Menu
+        <i class="fa-solid fa-bars"></i> <span>Menu</span>
     </button>
     <hr class="sidebar-divider" />
     <a href="{{ url_for('index') }}" class="nav-link {% if active_page == 'unggah' %}active{% endif %}">
-        <i class="fa-solid fa-file-arrow-up"></i> Unggah Dokumen
+        <i class="fa-solid fa-file-arrow-up"></i> <span>Unggah Dokumen</span>
     </a>
-    <a href="{{ url_for('hasil_klaster') if 'hasil_klaster' in url_map else '#' }}"
-        class="nav-link {% if active_page == 'klaster' %}active{% endif %}">
-        <i class="fa-solid fa-circle-nodes"></i> Hasil Klaster
+    <a href="{{ url_for('halaman_hasil_klaster') }}"
+        class="nav-link {% if active_page == 'hasil' %}active{% endif %}">
+        <i class="fa-solid fa-circle-nodes"></i> <span>Hasil Klaster</span>
     </a>
     <a href="#" class="nav-link {% if active_page == 'riwayat' %}active{% endif %}">
-        <i class="fa-solid fa-clock-rotate-left"></i> Riwayat
+        <i class="fa-solid fa-clock-rotate-left"></i> <span>Riwayat</span>
     </a>
     <div class="sidebar-user">
         <div class="user-avatar"><i class="fa-solid fa-user"></i></div>

@@ -15,19 +15,34 @@
 
     function closeSidebar() {
         sidebar.classList.add('collapsed');
-        mainContent.classList.add('expanded');
-        hamburgerFixed.classList.add('show');
-        overlay.classList.remove('active');
+        sidebar.classList.remove('active');
+        if (mainContent) mainContent.classList.add('expanded');
+        if (hamburgerFixed) hamburgerFixed.classList.add('show');
+        if (overlay) overlay.classList.remove('active');
     }
 
     function openSidebar() {
         sidebar.classList.remove('collapsed');
-        mainContent.classList.remove('expanded');
-        hamburgerFixed.classList.remove('show');
-        overlay.classList.add('active');
+        sidebar.classList.add('active');
+        if (mainContent) mainContent.classList.remove('expanded');
+        if (hamburgerFixed) hamburgerFixed.classList.remove('show'); // Hide fixed hamburger button when open
+        if (overlay) overlay.classList.add('active');
     }
 
-    menuBtn.addEventListener('click', closeSidebar);
-    hamburgerFixed.addEventListener('click', openSidebar);
-    overlay.addEventListener('click', closeSidebar);
+    // Toggle logic for the main sidebar button (desktop & mobile)
+    menuBtn.addEventListener('click', function () {
+        if (sidebar.classList.contains('collapsed')) {
+            openSidebar();
+        } else {
+            closeSidebar();
+        }
+    });
+
+    // Mobile trigger button and overlay
+    if (hamburgerFixed) {
+        hamburgerFixed.addEventListener('click', openSidebar);
+    }
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
 })();

@@ -16,6 +16,86 @@ def index():
     # Mengarahkan halaman utama ke formulir unggah dokumen
     return render_template('unggah_dokumen.html')
 
+@app.route('/hasil-klaster', methods=['GET', 'POST'])
+def halaman_hasil_klaster():
+    # Ambil threshold dari form jika POST, default 0.70 (70%)
+    threshold_val = 0.70
+    if request.method == 'POST':
+        raw_threshold = request.form.get('threshold')
+        if raw_threshold:
+            try:
+                threshold_val = float(raw_threshold) / 100.0
+            except ValueError:
+                threshold_val = 0.70
+
+    # Ubah nilai score menjadi angka desimal (float) agar bisa dihitung oleh HTML
+    contoh_clusters = [
+        {
+            'name': 'Klaster 1', 
+            'score': 0.82,  # Angka desimal murni, bukan teks '78%-86%'
+            'files': ['Dhea.pdf', 'Berliana.pdf', 'Jihan.pdf']
+        },
+        {
+            'name': 'Klaster 2', 
+            'score': 0.88, 
+            'files': ['Doni.pdf', 'Andi.pdf', 'Sari.pdf']
+        }
+    ]
+    
+    contoh_outliers = [
+        {'nama_file': 'Budi.pdf', 'score': 0.55}, # Pakai float
+        {'nama_file': 'Mira.pdf', 'score': 0.42}
+    ]
+
+    # Kirim juga nilai threshold pembandingnya jika HTML-nya meminta variabel itu
+    return render_template(
+        'hasil_klaster.html', 
+        clusters=contoh_clusters, 
+        outliers=contoh_outliers,
+        threshold=threshold_val  # Kita sediakan angka threshold
+    )
+
+@app.route('/detail-klaster')
+def detail_klaster():
+    cluster_name = request.args.get('cluster', 'Klaster 1')
+    files = ['Dhea.pdf', 'Berliana.pdf', 'Jihan.pdf']
+    matrix = [
+        [1.0, 0.78, 0.78],
+        [0.78, 1.0, 0.78],
+        [0.78, 0.78, 1.0]
+    ]
+    
+    # Text pairs dengan penanda highlight HTML
+    text_pairs = {
+        "Dhea.pdf_Berliana.pdf": {
+            "doc1Title": "Dhea.pdf",
+            "doc2Title": "Berliana.pdf",
+            "doc1Content": '<span class="highlight-direct">Pemrograman web merupakan salah satu bidang dalam ilmu komputer yang berfokus pada pengembangan aplikasi berbasis internet.</span> Dalam era digital saat ini, kebutuhan akan aplikasi web terus meningkat seiring berkembangnya teknologi informasi. Terdapat beberapa komponen utama dalam pemrograman web, yaitu HTML sebagai struktur, CSS sebagai tampilan, dan JavaScript sebagai logika interaktif. <span class="highlight-semantic">Ketiga komponen ini bekerja secara sinergis untuk menghasilkan antarmuka pengguna yang responsif dan fungsional.</span>',
+            "doc2Content": '<span class="highlight-direct">Web programming adalah salah satu cabang ilmu komputer yang menitikberatkan pada pembuatan aplikasi yang berjalan di atas jaringan internet.</span> Di era digital seperti sekarang, permintaan terhadap aplikasi berbasis web terus bertumbuh. Ada tiga elemen pokok dalam web programming, yaitu HTML untuk struktur, CSS untuk gaya tampilan, dan JavaScript untuk interaksi dinamis. <span class="highlight-semantic">Ketiganya saling melengkapi untuk menciptakan antarmuka yang responsif dan memiliki fungsi yang lengkap.</span>'
+        },
+        "Dhea.pdf_Jihan.pdf": {
+            "doc1Title": "Dhea.pdf",
+            "doc2Title": "Jihan.pdf",
+            "doc1Content": 'Pemrograman web merupakan salah satu bidang dalam ilmu komputer yang berfokus pada pengembangan aplikasi berbasis internet. <span class="highlight-semantic">Dalam era digital saat ini, kebutuhan akan aplikasi web terus meningkat seiring berkembangnya teknologi informasi.</span> Terdapat beberapa komponen utama dalam pemrograman web, yaitu HTML sebagai struktur, CSS sebagai tampilan, dan JavaScript sebagai logika interaktif. Ketiga komponen ini bekerja secara sinergis untuk menghasilkan antarmuka pengguna yang responsif dan fungsional.',
+            "doc2Content": 'Teknologi web berkembang sangat pesat dalam beberapa tahun terakhir. <span class="highlight-semantic">Kebutuhan akan platform digital berbasis internet terus mengalami lonjakan yang signifikan di era modern.</span> Oleh karena itu, mempelajari pemrograman web menjadi sangat relevan bagi mahasiswa teknik informatika.'
+        },
+        "Berliana.pdf_Jihan.pdf": {
+            "doc1Title": "Berliana.pdf",
+            "doc2Title": "Jihan.pdf",
+            "doc1Content": 'Web programming adalah salah satu cabang ilmu komputer yang menitikberatkan pada pembuatan aplikasi yang berjalan di atas jaringan internet. <span class="highlight-direct">Di era digital seperti sekarang, permintaan terhadap aplikasi berbasis web terus bertumbuh.</span> Ada tiga elemen pokok dalam web programming, yaitu HTML untuk struktur, CSS untuk gaya tampilan, dan JavaScript untuk interaksi dinamis. Ketiganya saling melengkapi untuk menciptakan antarmuka yang responsif dan memiliki fungsi yang lengkap.',
+            "doc2Content": 'Kebutuhan akan platform digital berbasis internet terus mengalami lonjakan yang signifikan di era modern. <span class="highlight-direct">Permintaan terhadap pembuatan sistem aplikasi web terus mengalami kenaikan yang pesat di era teknologi saat ini.</span> Ada berbagai macam library dan framework JavaScript yang dapat digunakan untuk mempercepat proses pembangunan aplikasi.'
+        }
+    }
+
+    return render_template(
+        'detail_klaster.html',
+        cluster_name=cluster_name,
+        files=files,
+        matrix=matrix,
+        text_pairs=text_pairs,
+        threshold=0.70
+    )
+
 @app.route('/upload-dummy', methods=['POST'])
 def upload_dummy():
     # Ambil metadata
