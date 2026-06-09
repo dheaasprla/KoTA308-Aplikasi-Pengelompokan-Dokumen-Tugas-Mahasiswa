@@ -16,252 +16,7 @@
     <!-- External CSS Style -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/hasil_klaster.css') }}" />
-
-    <!-- CSS Internal untuk detail_klaster -->
-    <style>
-        /* ═══════════ DETAILED STYLES FOR HEATMAP MATRIX ═══════════ */
-        .matrix-card {
-            background-color: #ffffff;
-            border: 1.5px solid #D1D5DB;
-            border-radius: 12px;
-            padding: 24px 32px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .matrix-title-area {
-            margin-bottom: 20px;
-        }
-
-        .matrix-title-area h2 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #000000;
-            margin-bottom: 4px;
-        }
-
-        .matrix-title-area p {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .matrix-table-container {
-            width: 100%;
-            overflow-x: auto;
-            margin-top: 12px;
-        }
-
-        .matrix-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            font-size: 13px;
-        }
-
-        .matrix-table th, .matrix-table td {
-            border: 1.5px solid #CBD5E1;
-            padding: 14px 16px;
-            font-weight: 600;
-        }
-
-        /* Th background matches mockup */
-        .matrix-table th {
-            background-color: #F8FAFC;
-            color: #0F172A;
-            font-weight: 700;
-        }
-
-        .matrix-table th:first-child {
-            width: 25%;
-        }
-
-        /* Diagonal disabled cells */
-        .matrix-table td.diagonal-cell {
-            background-color: #F1F5F9;
-            color: #94A3B8;
-            font-weight: 500;
-            cursor: not-allowed;
-        }
-
-        /* Clickable similarity cells with heatmap colors */
-        .matrix-table td.similarity-cell {
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        /* Heatmap classes based on similarity levels */
-        .matrix-table td.similarity-cell.level-high {
-            background-color: #FEE2E2; /* Light Red */
-            color: #991B1B;
-        }
-
-        .matrix-table td.similarity-cell.level-medium {
-            background-color: #FFEDD5; /* Light Orange */
-            color: #9A3412;
-        }
-
-        .matrix-table td.similarity-cell.level-low {
-            background-color: #ECFDF5; /* Light Green */
-            color: #065F46;
-        }
-
-        .matrix-table td.similarity-cell:hover {
-            filter: brightness(0.94);
-            transform: scale(1.01);
-            box-shadow: inset 0 0 0 2px var(--navy);
-        }
-
-        /* Active highlight for current compared pair */
-        .matrix-table td.similarity-cell.active-cell {
-            box-shadow: inset 0 0 0 2px var(--navy);
-            font-weight: 800;
-            filter: brightness(0.96);
-        }
-
-        /* ═══════════ TEXT COMPARISON AREA STYLES ═══════════ */
-        .comparison-card {
-            background-color: #ffffff;
-            border: 1.5px solid #D1D5DB;
-            border-radius: 12px;
-            padding: 24px 32px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .comparison-title-area {
-            margin-bottom: 20px;
-        }
-
-        .comparison-title-area h2 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #000000;
-            margin-bottom: 4px;
-        }
-
-        .comparison-title-area p {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        /* Side-by-side Layout Container */
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            border: 1.5px solid #CBD5E1;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .compare-column {
-            display: flex;
-            flex-direction: column;
-            background-color: #ffffff;
-        }
-
-        .compare-column:first-child {
-            border-right: 1.5px solid #CBD5E1;
-        }
-
-        /* Header block inside column */
-        .compare-header {
-            background-color: #E9ECF0;
-            color: #0F172A;
-            padding: 12px;
-            font-size: 13px;
-            font-weight: 700;
-            text-align: center;
-            border-bottom: 1.5px solid #CBD5E1;
-        }
-
-        /* Scrollable panel inside column */
-        .compare-body {
-            padding: 24px;
-            height: 400px;
-            overflow-y: scroll;
-            font-size: 12.5px;
-            line-height: 1.8;
-            color: #334155;
-            text-align: justify;
-        }
-
-        /* Scrollbar aesthetics styling */
-        .compare-body::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .compare-body::-webkit-scrollbar-track {
-            background: #F1F5F9;
-        }
-
-        .compare-body::-webkit-scrollbar-thumb {
-            background: #CBD5E1;
-            border-radius: 3px;
-        }
-
-        .compare-body::-webkit-scrollbar-thumb:hover {
-            background: #94A3B8;
-        }
-
-        /* Highlight styles matching SBERT indicators */
-        .highlight-direct {
-            color: #EF4444; /* Merah untuk Parafrasa Langsung */
-            background-color: transparent;
-            padding: 0;
-            border-radius: 0;
-            font-weight: inherit;
-        }
-
-        .highlight-semantic {
-            color: #D97706; /* Kuning/Gold untuk Kemiripan Semantik */
-            background-color: transparent;
-            padding: 0;
-            border-radius: 0;
-            font-weight: inherit;
-        }
-
-        /* ═══════════ LEGEND CONTAINER ═══════════ */
-        .legend-container {
-            display: flex;
-            gap: 24px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #334155;
-            padding-top: 4px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .legend-dot.red-dot {
-            background-color: #EF4444;
-        }
-
-        .legend-dot.yellow-dot {
-            background-color: #F59E0B;
-        }
-
-        /* Responsive stack */
-        @media (max-width: 992px) {
-            .comparison-grid {
-                grid-template-columns: 1fr;
-            }
-            .compare-column:first-child {
-                border-right: none;
-                border-bottom: 1.5px solid #CBD5E1;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/detail_klaster.css') }}" />
 </head>
 
 <body>
@@ -305,14 +60,14 @@
             </div>
 
             <!-- Kartu 2: Skor Tertinggi -->
-            <div class="stat-card red-border" style="border: 1.5px solid #EF4444;">
-                <div class="stat-icon-box" style="background-color: rgba(239, 68, 68, 0.08); color: #EF4444;">
+            <div class="stat-card red-border">
+                <div class="stat-icon-box">
                     <i class="fa-solid fa-arrow-up-right-dots"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-title" style="color: #EF4444;">Skor Tertinggi</div>
+                    <div class="stat-title">Skor Tertinggi</div>
                     <div class="stat-desc">Kemiripan Maksimal</div>
-                    <div class="stat-value" style="color: #EF4444;">78%</div>
+                    <div class="stat-value">78%</div>
                 </div>
             </div>
 
@@ -322,21 +77,21 @@
                     <i class="fa-solid fa-arrow-down-short-wide"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-title" style="color: var(--green);">Skor Terendah</div>
+                    <div class="stat-title">Skor Terendah</div>
                     <div class="stat-desc">Kemiripan Minimal</div>
-                    <div class="stat-value" style="color: var(--green);">78%</div>
+                    <div class="stat-value">78%</div>
                 </div>
             </div>
 
             <!-- Kartu 4: Rata - rata Skor -->
-            <div class="stat-card brown-border" style="border: 1.5px solid #D97706;">
-                <div class="stat-icon-box" style="background-color: rgba(217, 119, 6, 0.08); color: #D97706;">
+            <div class="stat-card brown-border">
+                <div class="stat-icon-box">
                     <i class="fa-solid fa-chart-simple"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-title" style="color: #D97706;">Rata - rata Skor</div>
+                    <div class="stat-title">Rata - rata Skor</div>
                     <div class="stat-desc">Kemiripan Rata-rata</div>
-                    <div class="stat-value" style="color: #D97706;">78%</div>
+                    <div class="stat-value">78%</div>
                 </div>
             </div>
 
@@ -438,120 +193,7 @@
     <div id="text-pairs-data" data-pairs="{{ text_pairs|tojson|safe if text_pairs is defined and text_pairs else '{}' }}" style="display: none;"></div>
 
     <!-- ═══════════ DETAILED COMPARISON DATA & SCRIPT ═══════════ -->
-    <script>
-        // Database text comparison dummy yang reaktif
-        const dataEl = document.getElementById('text-pairs-data');
-        const backendPairs = dataEl && dataEl.getAttribute('data-pairs') ? JSON.parse(dataEl.getAttribute('data-pairs')) : null;
-        
-        // Cek jika data kosong (empty object) dari JSON.parse
-        const hasBackendPairs = backendPairs && Object.keys(backendPairs).length > 0;
-        const comparisonDatabase = hasBackendPairs ? backendPairs : {
-            "Dhea.pdf_Berliana.pdf": {
-                doc1Title: "Dhea.pdf",
-                doc2Title: "Berliana.pdf",
-                doc1Content: `
-                    <span class="highlight-direct">Pemrograman web merupakan salah satu bidang dalam ilmu komputer yang berfokus pada pengembangan aplikasi berbasis internet.</span>
-                    Dalam era digital saat ini, kebutuhan akan aplikasi web terus meningkat seiring berkembangnya teknologi informasi.
-                    Terdapat beberapa komponen utama dalam pemrograman web, yaitu HTML sebagai struktur, CSS sebagai tampilan, dan JavaScript sebagai logika interaktif.
-                    <span class="highlight-semantic">Ketiga komponen ini bekerja secara sinergis untuk menghasilkan antarmuka pengguna yang responsif dan fungsional.</span>
-                `,
-                doc2Content: `
-                    <span class="highlight-direct">Web programming adalah salah satu cabang ilmu komputer yang menitikberatkan pada pembuatan aplikasi yang berjalan di atas jaringan internet.</span>
-                    Di era digital seperti sekarang, permintaan terhadap aplikasi berbasis web terus bertumbuh.
-                    Ada tiga elemen pokok dalam web programming, yaitu HTML untuk struktur, CSS untuk gaya tampilan, dan JavaScript untuk interaksi dinamis.
-                    <span class="highlight-semantic">Ketiganya saling melengkapi untuk menciptakan antarmuka yang responsif dan memiliki fungsi yang lengkap.</span>
-                `
-            },
-            "Dhea.pdf_Jihan.pdf": {
-                doc1Title: "Dhea.pdf",
-                doc2Title: "Jihan.pdf",
-                doc1Content: `
-                    Pemrograman web merupakan salah satu bidang dalam ilmu komputer yang berfokus pada pengembangan aplikasi berbasis internet.
-                    <span class="highlight-semantic">Dalam era digital saat ini, kebutuhan akan aplikasi web terus meningkat seiring berkembangnya teknologi informasi.</span>
-                    Terdapat beberapa komponen utama dalam pemrograman web, yaitu HTML sebagai struktur, CSS sebagai tampilan, dan JavaScript sebagai logika interaktif.
-                    Ketiga komponen ini bekerja secara sinergis untuk menghasilkan antarmuka pengguna yang responsif dan fungsional.
-                `,
-                doc2Content: `
-                    Teknologi web berkembang sangat pesat dalam beberapa tahun terakhir.
-                    <span class="highlight-semantic">Kebutuhan akan platform digital berbasis internet terus mengalami lonjakan yang signifikan di era modern.</span>
-                    Oleh karena itu, mempelajari pemrograman web menjadi sangat relevan bagi mahasiswa teknik informatika.
-                `
-            },
-            "Berliana.pdf_Jihan.pdf": {
-                doc1Title: "Berliana.pdf",
-                doc2Title: "Jihan.pdf",
-                doc1Content: `
-                    Web programming adalah salah satu cabang ilmu komputer yang menitikberatkan pada pembuatan aplikasi yang berjalan di atas jaringan internet.
-                    <span class="highlight-direct">Di era digital seperti sekarang, permintaan terhadap aplikasi berbasis web terus bertumbuh.</span>
-                    Ada tiga elemen pokok dalam web programming, yaitu HTML untuk struktur, CSS untuk gaya tampilan, dan JavaScript untuk interaksi dinamis.
-                    Ketiganya saling melengkapi untuk menciptakan antarmuka yang responsif dan memiliki fungsi yang lengkap.
-                `,
-                doc2Content: `
-                    Kebutuhan akan platform digital berbasis internet terus mengalami lonjakan yang signifikan di era modern.
-                    <span class="highlight-direct">Permintaan terhadap pembuatan sistem aplikasi web terus mengalami kenaikan yang pesat di era teknologi saat ini.</span>
-                    Ada berbagai macam library dan framework JavaScript yang dapat digunakan untuk mempercepat proses pembangunan aplikasi.
-                `
-            }
-        };
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const cells = document.querySelectorAll('.similarity-cell');
-            const doc1TitleEl = document.getElementById('compare-doc1-title');
-            const doc2TitleEl = document.getElementById('compare-doc2-title');
-            const doc1BodyEl = document.getElementById('compare-doc1-body');
-            const doc2BodyEl = document.getElementById('compare-doc2-body');
-
-            // Set initial compared pair dynamically based on first cell
-            const initialCell = document.querySelector('.similarity-cell');
-            if (initialCell) {
-                activateCell(initialCell);
-            }
-
-            cells.forEach(cell => {
-                cell.addEventListener('click', function () {
-                    activateCell(this);
-                });
-            });
-
-            function activateCell(cell) {
-                // Hapus kelas aktif dari semua sel
-                cells.forEach(c => c.classList.remove('active-cell'));
-                
-                // Tambah kelas aktif pada sel yang diklik
-                cell.classList.add('active-cell');
-
-                const doc1 = cell.getAttribute('data-doc1');
-                const doc2 = cell.getAttribute('data-doc2');
-                
-                // Generate key pembanding untuk pencarian data
-                let key = `${doc1}_${doc2}`;
-                let reverseKey = `${doc2}_${doc1}`;
-                
-                let data = comparisonDatabase[key] || comparisonDatabase[reverseKey];
-                
-                if (data) {
-                    // Update UI Comparison
-                    doc1TitleEl.textContent = doc1;
-                    doc2TitleEl.textContent = doc2;
-                    
-                    // Jika urutan terbalik, pastikan isi kolom juga ikut dibalik
-                    if (doc1 === data.doc1Title) {
-                        doc1BodyEl.innerHTML = data.doc1Content;
-                        doc2BodyEl.innerHTML = data.doc2Content;
-                    } else {
-                        doc1BodyEl.innerHTML = data.doc2Content;
-                        doc2BodyEl.innerHTML = data.doc1Content;
-                    }
-                } else {
-                    // Default jika data pembanding tidak ditemukan
-                    doc1TitleEl.textContent = doc1;
-                    doc2TitleEl.textContent = doc2;
-                    doc1BodyEl.innerHTML = `<p class="text-muted">Tidak ada data kemiripan kalimat detail yang tersedia untuk pasangan ini.</p>`;
-                    doc2BodyEl.innerHTML = `<p class="text-muted">Tidak ada data kemiripan kalimat detail yang tersedia untuk pasangan ini.</p>`;
-                }
-            }
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/detail_klaster.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
 </body>
 

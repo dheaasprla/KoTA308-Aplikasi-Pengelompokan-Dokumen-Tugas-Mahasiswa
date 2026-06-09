@@ -15,13 +15,13 @@
     /* Light grey/blue for active state background */
 
     /* Status Accents */
-    --blue: #0F52BA;
+    --blue: #004C8C;
     /* Total Dokumen Blue */
-    --orange: #D97706;
+    --orange: #D15000;
     /* Klaster Terbentuk Orange */
-    --green: #15803D;
+    --green: #167900;
     /* Dokumen Unik Green */
-    --brown: #854D0E;
+    --brown: #672900;
     /* Waktu Proses Brown/Bronze */
 
     --danger: #EF4444;
@@ -180,22 +180,22 @@ body {
 }
 
 .stat-card.blue-border .stat-icon-box {
-    background-color: rgba(15, 82, 186, 0.08);
+    background-color: rgba(144, 189, 227, 0.37);
     color: var(--blue);
 }
 
 .stat-card.orange-border .stat-icon-box {
-    background-color: rgba(217, 119, 6, 0.08);
+    background-color: rgba(255, 207, 170, 0.87);
     color: var(--orange);
 }
 
 .stat-card.green-border .stat-icon-box {
-    background-color: rgba(21, 128, 61, 0.08);
+    background-color: rgba(177, 255, 160, 0.65);
     color: var(--green);
 }
 
 .stat-card.brown-border .stat-icon-box {
-    background-color: rgba(133, 77, 14, 0.08);
+    background-color: rgba(220, 140, 87, 0.43);
     color: var(--brown);
 }
 
@@ -209,6 +209,22 @@ body {
     font-weight: 700;
     color: var(--navy);
     margin-bottom: 1px;
+}
+
+.stat-card.blue-border .stat-title {
+    color: var(--blue);
+}
+
+.stat-card.orange-border .stat-title {
+    color: var(--orange);
+}
+
+.stat-card.green-border .stat-title {
+    color: var(--green);
+}
+
+.stat-card.brown-border .stat-title {
+    color: var(--brown);
 }
 
 .stat-desc {

@@ -96,6 +96,10 @@ def detail_klaster():
         threshold=0.70
     )
 
+@app.route('/riwayat-sesi')
+def riwayat_sesi():
+    return render_template('riwayat_sesi.html')
+
 @app.route('/upload-dummy', methods=['POST'])
 def upload_dummy():
     # Ambil metadata
