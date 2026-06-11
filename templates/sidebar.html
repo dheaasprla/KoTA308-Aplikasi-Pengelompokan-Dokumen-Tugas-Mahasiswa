@@ -22,11 +22,11 @@
     <a href="{{ url_for('riwayat_sesi') }}" class="nav-link {% if active_page == 'riwayat' %}active{% endif %}">
         <i class="fa-solid fa-clock-rotate-left"></i> <span>Riwayat</span>
     </a>
-    <div class="sidebar-user">
+    <a href="{{ url_for('profil') }}" class="sidebar-user" style="text-decoration: none; cursor: pointer;">
         <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
         <div class="user-detail">
             <div class="user-name">Jhon Doe</div>
             <div class="user-email">jhondoe@gmail.com</div>
         </div>
-    </div>
+    </a>
 </aside>

@@ -7,6 +7,7 @@
 (function () {
     var sidebar = document.getElementById('sidebar');
     var mainContent = document.getElementById('mainContent');
+    var mainWrapper = document.querySelector('.main-wrapper'); // ← tambahan
     var menuBtn = document.getElementById('menuBtn');
     var hamburgerFixed = document.getElementById('hamburgerFixed');
     var overlay = document.getElementById('sidebarOverlay');
@@ -17,6 +18,7 @@
         sidebar.classList.add('collapsed');
         sidebar.classList.remove('active');
         if (mainContent) mainContent.classList.add('expanded');
+        if (mainWrapper) mainWrapper.classList.add('expanded'); // ← tambahan
         if (hamburgerFixed) hamburgerFixed.classList.add('show');
         if (overlay) overlay.classList.remove('active');
     }
@@ -25,6 +27,7 @@
         sidebar.classList.remove('collapsed');
         sidebar.classList.add('active');
         if (mainContent) mainContent.classList.remove('expanded');
+        if (mainWrapper) mainWrapper.classList.remove('expanded'); // ← tambahan
         if (hamburgerFixed) hamburgerFixed.classList.remove('show'); // Hide fixed hamburger button when open
         if (overlay) overlay.classList.add('active');
     }
