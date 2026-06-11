@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - KoTA308</title>
+</head>
+<body>
+    <h2>Daftar Akun</h2>
+
+    {% if error %}
+    <p style="color:red;">{{ error }}</p>
+    {% endif %}
+
+    <form action="{{ url_for('auth.register') }}" method="POST">
+        <div>
+            <label>Email</label>
+            <input type="email" name="email" required>
+        </div>
+        <div>
+            <label>Kata Sandi</label>
+            <input type="password" name="password" required>
+        </div>
+        <div>
+            <label>Konfirmasi Kata Sandi</label>
+            <input type="password" name="confirm_password" required>
+        </div>
+        <button type="submit">Daftar</button>
+    </form>
+
+    <hr>
+    <a href="{{ url_for('auth.google_login') }}">Lanjutkan dengan Google</a>
+    <hr>
+    <p>Sudah punya akun? <a href="{{ url_for('auth.login') }}">Masuk</a></p>
+</body>
+</html>

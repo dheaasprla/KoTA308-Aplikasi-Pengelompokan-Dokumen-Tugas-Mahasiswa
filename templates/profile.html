@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Profil - KoTA308</title>
+</head>
+<body>
+    <h2>Profil Pengguna</h2>
+
+    <p><strong>Nama:</strong> {{ user.nama }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+
+    <hr>
+    <a href="{{ url_for('auth.logout') }}">Keluar</a>
+</body>
+</html>
