@@ -1,0 +1,251 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Poppins:wght@400;700&display=swap');
+
+/* ── Text selection colour ── */
+::selection {
+    background: rgba(0, 0, 0, 0.60);
+    color: #FFFFFF;
+}
+::-moz-selection {
+    background: rgba(0, 0, 0, 0.60);
+    color: #FFFFFF;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: #F8FAFC;
+    color: #1E293B;
+    min-height: 100vh;
+    display: flex;
+}
+
+.auth-container {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.auth-left {
+    flex: 1;
+    background-color: #0F172A; /* Dark navy blue background */
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-illustration {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    object-position: bottom left;
+    z-index: 10;
+}
+
+.auth-right {
+    flex: 1;
+    background-color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-form-wrapper {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-logo {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem auto;
+    display: block;
+    border-radius: 50%;
+    background-color: #F1F5F9;
+    object-fit: cover;
+}
+
+.auth-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    color: #000000;
+}
+
+.auth-subtitle {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: #000000;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+/* Instruction text below subtitle */
+.form-instruction {
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    font-size: 16px;
+    font-weight: 400;
+    color: #000000;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #0F172A;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-style: italic;
+    /* stroke rgba(0,0,0,0.14) */
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    border-radius: 12px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    /* shadow 14% */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+.form-control:focus {
+    /* selection/focus ring 60% */
+    border-color: rgba(0, 0, 0, 0.60);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14), 0 0 0 3px rgba(0, 0, 0, 0.14);
+}
+
+.form-control::placeholder {
+    color: #94A3B8;
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    font-size: 16px;
+}
+
+.error-message {
+    color: #EF4444;
+    font-size: 0.75rem;
+    margin-top: 0.375rem;
+    display: none;
+}
+
+.btn {
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.btn-primary {
+    background-color: #1E293B; /* Navy */
+    color: #FFFFFF;
+    margin-top: 1rem;
+}
+
+.btn-primary:hover {
+    background-color: #0F172A;
+}
+
+.btn-primary:disabled {
+    background-color: #94A3B8;
+    cursor: not-allowed;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 0.75rem 0;   /* dikurangi agar lebih dekat ke tombol Google */
+    color: #94A3B8;
+    font-size: 0.875rem;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.divider::before {
+    margin-right: 1rem;
+}
+
+.divider::after {
+    margin-left: 1rem;
+}
+
+.btn-outline {
+    background-color: transparent;
+    border: 1px solid #CBD5E1;
+    color: #475569;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;          /* Semi Bold */
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;  /* teks + ikon di tengah bersama */
+    flex-direction: row;
+    gap: 0.75rem;             /* jarak antara teks dan ikon */
+}
+
+/* Ikon Google tidak dipaksa ke kanan */
+.btn-outline svg {
+    flex-shrink: 0;
+}
+
+.btn-outline:hover {
+    background-color: #F8FAFC;
+    border-color: #94A3B8;
+}
+
+.auth-footer {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #64748B;
+}
+
+.auth-footer a {
+    color: #0F172A;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .auth-left {
+        display: none;
+    }
+}
