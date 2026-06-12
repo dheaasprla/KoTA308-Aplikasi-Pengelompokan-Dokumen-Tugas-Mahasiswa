@@ -70,18 +70,21 @@
     overflow: hidden;
 }
 
-.matrix-table th, .matrix-table td {
+.matrix-table th,
+.matrix-table td {
     border-right: 1.5px solid var(--navy);
     border-bottom: 1.5px solid var(--navy);
     padding: 14px 16px;
     font-weight: 600;
 }
 
-.matrix-table th:last-child, .matrix-table td:last-child {
+.matrix-table th:last-child,
+.matrix-table td:last-child {
     border-right: none;
 }
 
-.matrix-table tr:last-child th, .matrix-table tr:last-child td {
+.matrix-table tr:last-child th,
+.matrix-table tr:last-child td {
     border-bottom: none;
 }
 
@@ -220,20 +223,22 @@
 
 /* Highlight styles matching SBERT indicators */
 .highlight-direct {
-    color: #EF4444; /* Merah untuk Parafrasa Langsung */
+    color: #FF6E6E;
+    /* Merah untuk Parafrasa Langsung */
     background-color: transparent;
     padding: 0;
     border-radius: 0;
     font-weight: inherit;
 }
 
-.highlight-semantic {
-    color: #D97706; /* Kuning/Gold untuk Kemiripan Semantik */
-    background-color: transparent;
+/* .highlight-semantic {
+    color: #D97706;
+    /* Kuning/Gold untuk Kemiripan Semantik */
+/* background-color: transparent;
     padding: 0;
     border-radius: 0;
     font-weight: inherit;
-}
+} */
 
 /* ═══════════ LEGEND CONTAINER ═══════════ */
 .legend-container {
@@ -258,18 +263,19 @@
 }
 
 .legend-dot.red-dot {
-    background-color: #EF4444;
+    background-color: #FF6E6E;
 }
 
-.legend-dot.yellow-dot {
+/* .legend-dot.yellow-dot {
     background-color: #F59E0B;
-}
+} */
 
 /* Responsive stack */
 @media (max-width: 992px) {
     .comparison-grid {
         grid-template-columns: 1fr;
     }
+
     .compare-column:first-child {
         border-right: none;
         border-bottom: 1.5px solid #CBD5E1;

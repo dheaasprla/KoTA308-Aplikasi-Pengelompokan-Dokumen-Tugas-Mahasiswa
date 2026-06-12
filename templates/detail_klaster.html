@@ -27,7 +27,7 @@
 
     <!-- ═══════════ MAIN CONTENT ═══════════ -->
     <main class="main" id="mainContent">
-        
+
         <!-- Header -->
         <header class="header-container">
             <div class="header-info">
@@ -46,7 +46,7 @@
 
         <!-- 4 Kolom Kartu Statistik Sejajar -->
         <section class="stat-grid">
-            
+
             <!-- Kartu 1: Total Dokumen -->
             <div class="stat-card blue-border">
                 <div class="stat-icon-box">
@@ -120,18 +120,16 @@
                         <tr>
                             <th>{{ row_file }}</th>
                             {% for col_file in files %}
-                                {% if row_file == col_file %}
-                                <td class="diagonal-cell">-</td>
-                                {% else %}
-                                    {# matrix[outer_idx][loop.index0] dapat bernilai desimal float #}
-                                    {% set val = (matrix[outer_idx][loop.index0] * 100)|int %}
-                                    <td class="similarity-cell {% if val >= 80 %}level-high{% elif val >= 70 %}level-medium{% else %}level-low{% endif %}" 
-                                        data-doc1="{{ row_file }}" 
-                                        data-doc2="{{ col_file }}"
-                                        data-score="{{ val }}%">
-                                        {{ val }}%
-                                    </td>
-                                {% endif %}
+                            {% if row_file == col_file %}
+                            <td class="diagonal-cell">-</td>
+                            {% else %}
+                            {# matrix[outer_idx][loop.index0] dapat bernilai desimal float #}
+                            {% set val = (matrix[outer_idx][loop.index0] * 100)|int %}
+                            <td class="similarity-cell {% if val >= 80 %}level-high{% elif val >= 70 %}level-medium{% else %}level-low{% endif %}"
+                                data-doc1="{{ row_file }}" data-doc2="{{ col_file }}" data-score="{{ val }}%">
+                                {{ val }}%
+                            </td>
+                            {% endif %}
                             {% endfor %}
                         </tr>
                         {% endfor %}
@@ -149,15 +147,19 @@
 
             <!-- Box comparison grid -->
             <div class="comparison-grid">
-                
+
                 <!-- Kolom Kiri (Dokumen 1) -->
                 <div class="compare-column">
                     <div class="compare-header" id="compare-doc1-title">Dhea.pdf</div>
                     <div class="compare-body" id="compare-doc1-body">
-                        <span class="highlight-direct">Pemrograman web merupakan salah satu bidang dalam ilmu komputer yang berfokus pada pengembangan aplikasi berbasis internet.</span>
-                        Dalam era digital saat ini, kebutuhan akan aplikasi web terus meningkat seiring berkembangnya teknologi informasi.
-                        Terdapat beberapa komponen utama dalam pemrograman web, yaitu HTML sebagai struktur, CSS sebagai tampilan, dan JavaScript sebagai logika interaktif.
-                        <span class="highlight-semantic">Ketiga komponen ini bekerja secara sinergis untuk menghasilkan antarmuka pengguna yang responsif dan fungsional.</span>
+                        <span class="highlight-direct">Pemrograman web merupakan salah satu bidang dalam ilmu komputer
+                            yang berfokus pada pengembangan aplikasi berbasis internet.</span>
+                        Dalam era digital saat ini, kebutuhan akan aplikasi web terus meningkat seiring berkembangnya
+                        teknologi informasi.
+                        Terdapat beberapa komponen utama dalam pemrograman web, yaitu HTML sebagai struktur, CSS sebagai
+                        tampilan, dan JavaScript sebagai logika interaktif.
+                        <span class="highlight-direct">Ketiga komponen ini bekerja secara sinergis untuk menghasilkan
+                            antarmuka pengguna yang responsif dan fungsional.</span>
                     </div>
                 </div>
 
@@ -165,10 +167,13 @@
                 <div class="compare-column">
                     <div class="compare-header" id="compare-doc2-title">Berliana.pdf</div>
                     <div class="compare-body" id="compare-doc2-body">
-                        <span class="highlight-direct">Web programming adalah salah satu cabang ilmu komputer yang menitikberatkan pada pembuatan aplikasi yang berjalan di atas jaringan internet.</span>
+                        <span class="highlight-direct">Web programming adalah salah satu cabang ilmu komputer yang
+                            menitikberatkan pada pembuatan aplikasi yang berjalan di atas jaringan internet.</span>
                         Di era digital seperti sekarang, permintaan terhadap aplikasi berbasis web terus bertumbuh.
-                        Ada tiga elemen pokok dalam web programming, yaitu HTML untuk struktur, CSS untuk gaya tampilan, dan JavaScript untuk interaksi dinamis.
-                        <span class="highlight-semantic">Ketiganya saling melengkapi untuk menciptakan antarmuka yang responsif dan memiliki fungsi yang lengkap.</span>
+                        Ada tiga elemen pokok dalam web programming, yaitu HTML untuk struktur, CSS untuk gaya tampilan,
+                        dan JavaScript untuk interaksi dinamis.
+                        <span class="highlight-direct">Ketiganya saling melengkapi untuk menciptakan antarmuka yang
+                            responsif dan memiliki fungsi yang lengkap.</span>
                     </div>
                 </div>
 
@@ -178,19 +183,21 @@
             <footer class="legend-container">
                 <div class="legend-item">
                     <div class="legend-dot red-dot"></div>
-                    <span>Terindikasi parafrasa langsung</span>
+                    <span>Terindikasi parafrasa</span>
                 </div>
-                <div class="legend-item">
+                <!-- <div class="legend-item">
                     <div class="legend-dot yellow-dot"></div>
                     <span>Kemiripan semantik tinggi</span>
-                </div>
+                </div> -->
             </footer>
         </section>
 
     </main>
 
     <!-- Hidden element untuk mempassing data dari Flask ke JavaScript tanpa error IDE -->
-    <div id="text-pairs-data" data-pairs="{{ text_pairs|tojson|safe if text_pairs is defined and text_pairs else '{}' }}" style="display: none;"></div>
+    <div id="text-pairs-data"
+        data-pairs="{{ text_pairs|tojson|safe if text_pairs is defined and text_pairs else '{}' }}"
+        style="display: none;"></div>
 
     <!-- ═══════════ DETAILED COMPARISON DATA & SCRIPT ═══════════ -->
     <script src="{{ url_for('static', filename='js/detail_klaster.js') }}"></script>
