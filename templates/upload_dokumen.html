@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>KoTA-308 | Upload Dokumen</title>
+</head>
+<body>
+    <h1>Upload Dokumen — {{ sesi.nama_matkul }} ({{ sesi.kelas }})</h1>
+    <p>Total file terunggah: {{ sesi.total_file_terunggah }} / 32</p>
+    <p>Ukuran terpakai: {{ sesi.ukuran_terpakai_mb }} MB / 200 MB</p>
+    <p>Threshold saat ini: {{ sesi.threshold_awal|int }}%</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                    <li style="color: {{ 'red' if category == 'error' else 'green' }}">
+                        {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <h2>Daftar Dokumen Terunggah</h2>
+    <ul>
+        {% for dok in sesi.dokumen_tugas %}
+            <li>{{ dok.nama_file }} ({{ dok.ukuran_file_mb }} MB)</li>
+        {% else %}
+            <li>Belum ada dokumen.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Unggah Berkas PDF</h2>
+    <form method="POST"
+          action="{{ url_for('sesi.confirm_batch_upload', id_sesi=sesi.id_sesi) }}"
+          enctype="multipart/form-data">
+        <input type="file" name="files[]" accept=".pdf" multiple>
+        <br><br>
+        <button type="submit">Unggah</button>
+    </form>
+
+    <hr>
+
+    <h2>Atur Threshold (placeholder, modal asli menyusul saat integrasi FE)</h2>
+    <form method="POST" action="{{ url_for('sesi.update_threshold', id_sesi=sesi.id_sesi) }}">
+        <input type="range" name="threshold" min="0" max="100" step="1"
+               value="{{ sesi.threshold_awal|int }}"
+               oninput="this.nextElementSibling.value = this.value">
+        <output>{{ sesi.threshold_awal|int }}</output>%
+        <br><br>
+        <button type="submit">Mulai Analisis</button>
+    </form>
+</body>
+</html>

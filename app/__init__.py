@@ -28,6 +28,10 @@ def create_app(config_name='default'):
     # Daftarkan blueprint auth
     from app.auth.routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    
+    # Daftarkan blueprint sesi (UC-01 & UC-02)
+    from app.sesi import sesi_bp
+    app.register_blueprint(sesi_bp, url_prefix='/sesi')
 
     # Route redirect halaman utama ke login
     @app.route('/')
