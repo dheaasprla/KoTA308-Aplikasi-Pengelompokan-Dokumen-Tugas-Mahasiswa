@@ -1,6 +1,7 @@
 import os
 import time
 from flask import Flask, render_template, request, jsonify, redirect, url_for
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "kota308_secret_key"
@@ -11,10 +12,54 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # Max 50MB upload size
 # Pastikan folder uploads tersedia
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+ALLOWED_EXTENSIONS = {'pdf'}
+
+def allowed_file(filename):
+    """Cek apakah file ber-ekstensi .pdf"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/')
 def index():
     # Mengarahkan halaman utama ke formulir unggah dokumen
     return render_template('unggah_dokumen.html')
+
+@app.route('/unggah', methods=['GET'])
+def unggah_dokumen():
+    return render_template('unggah_dokumen.html')
+
+@app.route('/unggah/upload', methods=['POST'])
+def upload_file():
+    mata_kuliah = request.form.get('mata_kuliah', '').strip()
+    kelas       = request.form.get('kelas', '').strip()
+    files       = request.files.getlist('files')
+
+    if not mata_kuliah or not kelas:
+        return jsonify({'status': 'error', 'message': 'Nama mata kuliah dan kelas wajib diisi.'}), 400
+
+    if not files or all(f.filename == '' for f in files):
+        return jsonify({'status': 'error', 'message': 'Tidak ada file yang dipilih.'}), 400
+
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+    uploaded = []
+    for f in files:
+        if f and allowed_file(f.filename):
+            filename = secure_filename(f.filename)
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            f.save(save_path)
+            uploaded.append(filename)
+
+    if not uploaded:
+        return jsonify({'status': 'error', 'message': 'Hanya file .pdf yang diterima.'}), 400
+
+    return jsonify({
+        'status'      : 'success',
+        'mata_kuliah' : mata_kuliah,
+        'kelas'       : kelas,
+        'files'       : uploaded
+    })
+
 
 @app.route('/login')
 def login():
