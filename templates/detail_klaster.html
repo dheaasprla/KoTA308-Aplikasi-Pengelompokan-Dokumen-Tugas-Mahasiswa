@@ -13,6 +13,8 @@
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
+
+
     <!-- External CSS Style -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/hasil_klaster.css') }}" />
@@ -55,7 +57,7 @@
                 <div class="stat-info">
                     <div class="stat-title">Total Dokumen</div>
                     <div class="stat-desc">PDF Diproses</div>
-                    <div class="stat-value">3</div>
+                    <div class="stat-value">{{ files|length }}</div>
                 </div>
             </div>
 
@@ -67,7 +69,7 @@
                 <div class="stat-info">
                     <div class="stat-title">Skor Tertinggi</div>
                     <div class="stat-desc">Kemiripan Maksimal</div>
-                    <div class="stat-value">78%</div>
+                    <div class="stat-value">{{ (max_similarity * 100)|int }}%</div>
                 </div>
             </div>
 
@@ -79,7 +81,7 @@
                 <div class="stat-info">
                     <div class="stat-title">Skor Terendah</div>
                     <div class="stat-desc">Kemiripan Minimal</div>
-                    <div class="stat-value">78%</div>
+                    <div class="stat-value">{{ (min_similarity * 100)|int }}%</div>
                 </div>
             </div>
 
@@ -91,7 +93,7 @@
                 <div class="stat-info">
                     <div class="stat-title">Rata - rata Skor</div>
                     <div class="stat-desc">Kemiripan Rata-rata</div>
-                    <div class="stat-value">78%</div>
+                    <div class="stat-value">{{ (avg_similarity * 100)|int }}%</div>
                 </div>
             </div>
 
@@ -137,6 +139,8 @@
                 </table>
             </div>
         </section>
+
+
 
         <!-- Perbandingan Teks (Side-by-Side Comparison) -->
         <section class="comparison-card">
@@ -198,6 +202,9 @@
     <div id="text-pairs-data"
         data-pairs="{{ text_pairs|tojson|safe if text_pairs is defined and text_pairs else '{}' }}"
         style="display: none;"></div>
+
+    <!-- jQuery JS CDN -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 
     <!-- ═══════════ DETAILED COMPARISON DATA & SCRIPT ═══════════ -->
     <script src="{{ url_for('static', filename='js/detail_klaster.js') }}"></script>

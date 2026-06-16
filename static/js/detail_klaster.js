@@ -109,4 +109,6 @@ document.addEventListener('DOMContentLoaded', function () {
             doc2BodyEl.innerHTML = `<p class="text-muted">Tidak ada data kemiripan kalimat detail yang tersedia untuk pasangan ini.</p>`;
         }
     }
+
 });
+
