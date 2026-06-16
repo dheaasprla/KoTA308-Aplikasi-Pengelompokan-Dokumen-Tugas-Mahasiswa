@@ -40,9 +40,15 @@
                 <button type="button" class="btn btn-outline" id="btn-reanalyze">
                     <i class="fa-solid fa-rotate"></i> Analisis Ulang
                 </button>
-                <button type="button" class="btn btn-primary" id="btn-download">
-                    <i class="fa-solid fa-download"></i> Unduh Laporan
-                </button>
+                <div class="dropdown">
+                    <button type="button" class="btn btn-primary dropdown-toggle" id="btn-export-dropdown">
+                        <i class="fa-solid fa-download"></i> Unduh Laporan <i class="fa-solid fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
+                    </button>
+                    <div class="dropdown-menu" id="export-dropdown-menu">
+                        <a class="dropdown-item" href="/ekspor/excel?cluster=all"><i class="fa-regular fa-file-excel" style="color: #1F7246; margin-right: 8px;"></i> Ekspor format Excel (.xlsx)</a>
+                        <a class="dropdown-item" href="/ekspor/pdf?cluster=all"><i class="fa-regular fa-file-pdf" style="color: #B00505; margin-right: 8px;"></i> Unduh format PDF (.pdf)</a>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -122,7 +128,7 @@
                                 <div class="score-info">
                                     <div class="score-label">Skor Kemiripan</div>
                                     <div class="score-value">
-                                        {{ (cluster.score * 100)|int }}%
+                                        {{ (cluster.score_min * 100)|int }}% - {{ (cluster.score_max * 100)|int }}%
                                     </div>
                                 </div>
                                 <i class="fa-solid fa-chevron-right chevron-icon"></i>

@@ -5,7 +5,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     initAccordion();
     initOutliersToggle();
-    initDownloadButton();
+    initExportDropdown();
     initProgressBars();
 });
 
@@ -89,63 +89,22 @@ function initOutliersToggle() {
 }
 
 /**
- * Handle Download Report Simulation with a Toast Notification
+ * Handle Export Dropdown Menu Actions
  */
-function initDownloadButton() {
-    const downloadBtn = document.getElementById('btn-download');
-    
-    if (downloadBtn) {
-        downloadBtn.addEventListener('click', function () {
-            // Add loading state
-            const originalContent = this.innerHTML;
-            this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengunduh...';
-            this.style.pointerEvents = 'none';
-            this.style.opacity = '0.8';
+function initExportDropdown() {
+    const dropdownToggle = document.getElementById('btn-export-dropdown');
+    const dropdownMenu = document.getElementById('export-dropdown-menu');
 
-            // Simulate file generation and download
-            setTimeout(() => {
-                // Restore button state
-                this.innerHTML = originalContent;
-                this.style.pointerEvents = 'auto';
-                this.style.opacity = '1';
-                
-                // Show a premium toast notification
-                showToast('Laporan PDF Berhasil Diunduh!', 'File laporan hasil pengelompokan telah disimpan ke folder unduhan Anda.', 'success');
-                
-                // Trigger dummy download
-                triggerDummyDownload();
-            }, 1500);
+    if (dropdownToggle && dropdownMenu) {
+        dropdownToggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function () {
+            dropdownMenu.classList.remove('show');
         });
     }
-}
-
-
-/**
- * Trigger a dummy file download
- */
-function triggerDummyDownload() {
-    const textContent = "KOTA-308 LAPORAN HASIL KLASTERISASI DOKUMEN TUGAS\n" +
-                        "================================================\n" +
-                        "Tanggal: 2 Juni 2026\n" +
-                        "Total Dokumen: 29 PDF\n" +
-                        "Threshold: 70%\n" +
-                        "Klaster Terbentuk: 3\n" +
-                        "Dokumen Unik (Outliers): 7\n\n" +
-                        "Detail Klaster:\n" +
-                        "- Klaster 1 (88%): Dhea.pdf, Berliana.pdf, Jihan.pdf\n" +
-                        "- Klaster 2 (95%): Tugas_Ahmad_Syukur.pdf, Tugas_Ahmad_Syukur_Parafrase.pdf\n" +
-                        "- Klaster 3 (75%): Tugas_Dhea_Aprilia.pdf, Tugas_Dhea_Aprilia_Parafrase.pdf\n\n" +
-                        "- Outliers: Budi.pdf, Mira.pdf, Citra_Lestari.pdf, Eko_Prasetyo.pdf, Farhan_Wibowo.pdf, Gita_Saraswati.pdf, Hadi_Kusuma.pdf\n";
-                        
-    const blob = new Blob([textContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Laporan_Hasil_Klaster_KoTA308.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
 }
 
 /**
