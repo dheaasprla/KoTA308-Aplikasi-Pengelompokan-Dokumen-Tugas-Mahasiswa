@@ -22,7 +22,11 @@
                 <h1 class="auth-title">Sistem Pengelompokan Tugas Mahasiswa (SPTM)</h1>
                 <p class="auth-subtitle">Selamat Datang! Tolong masukkan data anda</p>
 
-                <form id="loginForm" action="#" method="POST">
+                {% if error %}
+                <p class="error-message-global" style="color: #ff4d4f; margin-bottom: 15px; font-weight: 500; text-align: center;">{{ error }}</p>
+                {% endif %}
+
+                <form id="loginForm" action="{{ url_for('auth.login') }}" method="POST">
                     <div class="form-group">
                         <label for="email">Email</label>
                         <input type="email" id="email" name="email" class="form-control" placeholder="Masukkan Email" required>
@@ -39,7 +43,7 @@
                 
                 <div class="divider">atau</div>
                 
-                <button type="button" class="btn btn-outline">
+                <a href="{{ url_for('auth.google_login') }}" class="btn btn-outline" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px;">
                     Lanjutkan dengan Google
                     <!-- Google SVG Icon on the RIGHT -->
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -48,10 +52,10 @@
                         <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.82999 3.96409 7.29V4.95818H0.957275C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957275 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
                         <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"/>
                     </svg>
-                </button>
+                </a>
                 
                 <div class="auth-footer">
-                    Belum punya akun? <a href="{{ url_for('register') }}" onclick="if(this.href.includes('url_for')){ window.location.href='register.html'; return false; }">Daftar</a>
+                    Belum punya akun? <a href="{{ url_for('auth.register') }}">Daftar</a>
                 </div>
             </div>
         </div>

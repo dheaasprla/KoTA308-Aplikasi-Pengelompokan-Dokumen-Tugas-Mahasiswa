@@ -2,9 +2,11 @@ import os
 import time
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from werkzeug.utils import secure_filename
+from app import create_app
 
-app = Flask(__name__)
-app.secret_key = "kota308_secret_key"
+app = create_app('development')
+
+# Config UPLOAD_FOLDER
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # Max 50MB upload size
@@ -18,11 +20,6 @@ def allowed_file(filename):
     """Cek apakah file ber-ekstensi .pdf"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/')
-def index():
-    # Mengarahkan halaman utama ke formulir unggah dokumen
-    return render_template('unggah_dokumen.html')
 
 @app.route('/unggah', methods=['GET'])
 def unggah_dokumen():
@@ -59,19 +56,6 @@ def upload_file():
         'kelas'       : kelas,
         'files'       : uploaded
     })
-
-
-@app.route('/login')
-def login():
-    return render_template('login.html')
-
-@app.route('/register')
-def register():
-    return render_template('register.html')
-
-@app.route('/profil')
-def profil():
-    return render_template('profile.html')
 
 @app.route('/hasil-klaster', methods=['GET', 'POST'])
 def halaman_hasil_klaster():

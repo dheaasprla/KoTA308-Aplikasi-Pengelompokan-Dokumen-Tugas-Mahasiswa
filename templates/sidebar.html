@@ -1,0 +1,29 @@
+<!-- File: templates/sidebar.html -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<button class="hamburger-fixed" id="hamburgerFixed">
+    <i class="fa-solid fa-bars"></i>
+</button>
+<aside class="sidebar" id="sidebar">
+    <button class="menu-btn" id="menuBtn">
+        <i class="fa-solid fa-bars"></i> <span>Menu</span>
+    </button>
+    <hr class="sidebar-divider" />
+    <a href="#" class="nav-link {% if active_page == 'unggah' %}active{% endif %}">
+        <i class="fa-solid fa-file-arrow-up"></i> <span>Unggah Dokumen</span>
+    </a>
+    <a href="#" class="nav-link {% if active_page == 'hasil' %}active{% endif %}">
+        <i class="fa-solid fa-circle-nodes"></i> <span>Hasil Klaster</span>
+    </a>
+    <a href="#" class="nav-link {% if active_page == 'riwayat' %}active{% endif %}">
+        <i class="fa-solid fa-clock-rotate-left"></i> <span>Riwayat</span>
+    </a>
+    <a href="{{ url_for('auth.profile') }}" class="sidebar-user" style="text-decoration: none; cursor: pointer; margin-top: auto;">
+        <div class="user-avatar">
+            <i class="fa-solid fa-user"></i>
+        </div>
+        <div class="user-detail">
+            <div class="user-name">{{ session.get('user_nama', 'User') }}</div>
+            <div class="user-email">{{ session.get('user_email', '') }}</div>
+        </div>
+    </a>
+</aside>
