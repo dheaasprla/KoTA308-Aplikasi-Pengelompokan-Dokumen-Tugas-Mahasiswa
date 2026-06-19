@@ -5,8 +5,58 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmPasswordInput = document.getElementById('confirm_password');
     const passwordError = document.getElementById('passwordError');
     const registerBtn = document.getElementById('registerBtn');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
 
-    // Email Validation (Real-time)
+    // ─── Fungsi Shake ───────────────────────────────────────────
+    function triggerShake(element) {
+        element.classList.remove('shake');
+        void element.offsetWidth; // reset animasi biar bisa dipicu ulang
+        element.classList.add('shake');
+        setTimeout(function () {
+            element.classList.remove('shake');
+        }, 400);
+    }
+
+    // ─── Handle Submit Form Login ────────────────────────────────
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (e) {
+            const inputs = loginForm.querySelectorAll('input[required]');
+            let hasEmpty = false;
+
+            inputs.forEach(function (input) {
+                if (!input.value.trim()) {
+                    triggerShake(input);
+                    hasEmpty = true;
+                }
+            });
+
+            if (hasEmpty) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // ─── Handle Submit Form Register ────────────────────────────
+    if (registerForm) {
+        registerForm.addEventListener('submit', function (e) {
+            const inputs = registerForm.querySelectorAll('input[required]');
+            let hasEmpty = false;
+
+            inputs.forEach(function (input) {
+                if (!input.value.trim()) {
+                    triggerShake(input);
+                    hasEmpty = true;
+                }
+            });
+
+            if (hasEmpty) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // ─── Validasi Email Real-time ────────────────────────────────
     if (emailInput && emailError) {
         emailInput.addEventListener('input', function () {
             const emailValue = emailInput.value;
@@ -21,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Password Validation (Real-time)
+    // ─── Validasi Password Real-time ─────────────────────────────
     function validatePassword() {
         if (!passwordInput || !confirmPasswordInput || !passwordError || !registerBtn) return;
 
@@ -45,7 +95,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function checkFormValidity() {
-        // Additional form level checks if needed before enabling the button
         if (registerBtn && passwordInput && confirmPasswordInput) {
             if (passwordInput.value !== confirmPasswordInput.value) {
                 registerBtn.disabled = true;
@@ -54,4 +103,19 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
+
+    // ─── Ubah pesan validasi bawaan browser ke Bahasa Indonesia ───
+    document.querySelectorAll('input[required]').forEach(function (input) {
+        input.addEventListener('invalid', function () {
+            if (input.value.trim() === '') {
+                input.setCustomValidity('Mohon isi kolom ini.');
+            } else {
+                input.setCustomValidity('');
+            }
+        });
+
+        input.addEventListener('input', function () {
+            input.setCustomValidity('');
+        });
+    });
 });
