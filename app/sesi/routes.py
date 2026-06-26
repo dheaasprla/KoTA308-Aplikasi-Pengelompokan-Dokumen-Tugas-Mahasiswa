@@ -23,6 +23,9 @@ from utils.pdf_validator import (
     is_allowed_extension,
     is_text_based_pdf,
     extract_text_from_pdf,
+    MIN_TEXT_LENGTH,  # <-- BARU: diimport untuk dipakai di pesan error
+                      # agar angka threshold konsisten antara validator
+                      # dan pesan yang ditampilkan ke user
 )
 from utils.text_preprocessor import clean_text
 
@@ -65,7 +68,6 @@ def submit_session_data():
     nama_matkul = request.form.get('mata_kuliah', '').strip()
     kelas = request.form.get('kelas', '').strip()
 
-    # ── Validasi field tidak boleh kosong (Extension 3a) ──
     errors = []
     if not nama_matkul:
         errors.append('Nama Mata Kuliah tidak boleh kosong.')
@@ -77,7 +79,6 @@ def submit_session_data():
             flash(err, 'error')
         return redirect(url_for('sesi.form_sesi_baru'))
 
-    # Key session sesuai app/auth/routes.py adalah 'user_id'
     id_dosen = session.get('user_id')
     if id_dosen is None:
         flash('Sesi login tidak ditemukan, silakan login kembali.', 'error')
@@ -109,10 +110,6 @@ def submit_session_data():
 def form_upload(id_sesi):
     """
     Menampilkan halaman upload dokumen untuk sesi tertentu.
-
-    Variabel 'sesi' dikirim utuh ke template, termasuk
-    sesi.threshold_awal (skala 0-100) yang langsung dipakai
-    oleh konfigurasi_threshold.html tanpa konversi apapun.
     """
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
     return render_template('upload_dokumen.html', sesi=sesi)
@@ -129,18 +126,14 @@ def confirm_batch_upload(id_sesi):
         1. Validasi jumlah file total (<= MAX_FILES_PER_SESSION)
         2. Untuk setiap file:
            a. Validasi ekstensi (.pdf)
-           b. Validasi ukuran (<= MAX_FILE_SIZE_MB, dari .env)
+           b. Validasi ukuran (<= MAX_FILE_SIZE_MB)
            c. Validasi kuota total sesi (<= MAX_TOTAL_SIZE_MB)
-           d. Validasi teks-based vs scan (PyMuPDF)
+           d. Validasi kandungan teks dokumen (>= MIN_TEXT_LENGTH)
         3. Ekstrak teks mentah (PyMuPDF)
-        4. Preprocessing: clean_text() - case folding
+        4. Preprocessing: clean_text() — case folding
         5. Simpan file fisik ke UPLOAD_FOLDER
         6. Insert metadata + teks_ekstraksi ke dokumen_tugas
         7. Update total_file_terunggah & ukuran_terpakai_mb di sesi
-
-    Extension 4a (SRS): jumlah file > 32 -> tolak SEMUA file
-    Extension 4b (SRS): file bukan PDF / hasil scan -> tolak file
-                        tersebut saja, file lain tetap diproses
     """
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
 
@@ -159,9 +152,19 @@ def confirm_batch_upload(id_sesi):
         sisa_kuota = max_files - sesi.total_file_terunggah
         flash(
             f'Jumlah berkas melebihi batas maksimal {max_files} dokumen '
-            f'per sesi. Sisa kuota Anda saat ini: {sisa_kuota} berkas.',
+            f'per sesi. Sisa kuota Anda saat ini: {sisa_kuota} berkas. '
+            f'Tidak ada berkas yang diunggah.',
             'error'
         )
+        
+        file_gagal = uploaded_files[sisa_kuota:]
+        for file in file_gagal:
+            flash(
+                f'Tidak diunggah: {file.filename} '
+                f'(kuota sesi penuh, maksimal {max_files} dokumen)',
+                'error'
+            )
+        
         return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
 
     max_size_mb = current_app.config['MAX_FILE_SIZE_MB']
@@ -202,17 +205,41 @@ def confirm_batch_upload(id_sesi):
             )
             continue
 
-        # ── Validasi 2d: Deteksi PDF berbasis teks vs scan ──
+        # ── Validasi 2d: Kandungan teks dokumen >= MIN_TEXT_LENGTH ──
+        #
+        # PERUBAHAN dari versi sebelumnya:
+        #   - is_text_based_pdf() sekarang mengembalikan tuple (bool, int)
+        #     bukan hanya bool, sehingga kita bisa menampilkan jumlah
+        #     karakter aktual yang terekstrak di pesan error.
+        #   - Pesan error dibuat netral (tidak menyebut "scan") karena
+        #     sistem tidak bisa memastikan penyebab kurangnya teks.
+        #     Bisa karena scan tanpa OCR, PDF rusak, atau memang sedikit.
+        #   - MIN_TEXT_LENGTH diimport dari pdf_validator agar angka
+        #     yang ditampilkan di pesan selalu konsisten dengan threshold
+        #     yang sebenarnya dipakai oleh validator.
+        #
         file.stream.seek(0)
-        if not is_text_based_pdf(file.stream):
+        is_valid, char_count = is_text_based_pdf(file.stream)
+        # is_valid  → True jika char_count >= MIN_TEXT_LENGTH
+        # char_count → jumlah karakter yang berhasil diekstrak,
+        #              digunakan di pesan error agar user tahu angka pastinya
+
+        if not is_valid:
             ditolak.append(
-                f'{filename} (terdeteksi sebagai hasil scan/tidak '
-                f'memiliki teks yang dapat dibaca)'
+                f'{filename} (teks yang berhasil diekstrak hanya '
+                f'{char_count} karakter, di bawah batas minimum '
+                f'{MIN_TEXT_LENGTH} karakter yang diperlukan. '
+                f'Pastikan dokumen berisi konten teks yang dapat dibaca.)'
             )
+            # Lanjut ke file berikutnya, file ini ditolak.
+            # File lain dalam batch tetap diproses (Extension 4b SRS).
             continue
+
         file.stream.seek(0)
 
         # ── Ekstraksi teks mentah ──
+        # Stream sudah di-seek(0) di atas setelah is_text_based_pdf.
+        # extract_text_from_pdf() akan membaca stream dari awal.
         try:
             raw_text = extract_text_from_pdf(file.stream)
         except Exception:
@@ -225,7 +252,9 @@ def confirm_batch_upload(id_sesi):
         # ── Simpan file fisik ke server ──
         # Nama file di disk dibuat unik (UUID) untuk menghindari
         # konflik nama antar mahasiswa/sesi, sementara nama_file
-        # asli (identitas mahasiswa, Opsi C) disimpan di database.
+        # asli (identitas mahasiswa) disimpan di kolom nama_file DB.
+        # Saat ditampilkan ke user di UI, ekstensi dihilangkan:
+        #   nama_tampil = dokumen.nama_file.rsplit('.', 1)[0]
         file.stream.seek(0)
         ext = os.path.splitext(filename)[1]
         disk_filename = f'{uuid.uuid4().hex}{ext}'
@@ -249,7 +278,9 @@ def confirm_batch_upload(id_sesi):
     # ── Update statistik sesi ──
     if berhasil:
         sesi.total_file_terunggah += len(berhasil)
-        sesi.ukuran_terpakai_mb = round(sesi.ukuran_terpakai_mb + total_size_baru, 2)
+        sesi.ukuran_terpakai_mb = round(
+            sesi.ukuran_terpakai_mb + total_size_baru, 2
+        )
 
     db.session.commit()
 
@@ -265,25 +296,14 @@ def confirm_batch_upload(id_sesi):
 
 # ============================================================
 # Capture nilai threshold (bagian dari CO-03)
-#
-# CATATAN SCOPE: Route ini HANYA menyimpan nilai threshold.
-# Logika analisis klaster penuh (commandClusterAnalysis,
-# embedding SBERT, dst) dikerjakan di sprint analisis.
 # ============================================================
 
 @sesi_bp.route('/<int:id_sesi>/hasil-klaster', methods=['POST'])
 @login_required
 def update_threshold(id_sesi):
     """
-    Menyimpan nilai threshold yang dipilih dosen melalui slider
-    pada modal konfigurasi threshold (REQ-UI-07).
-
-    Nilai dikirim dan disimpan dalam skala 0-100, konsisten
-    dengan kolom threshold_awal di models.py.
-
-    Validasi: nilai threshold harus berada di rentang 0-100
-    (Extension 2a SRS). Jika tidak valid, dikembalikan ke
-    DEFAULT_THRESHOLD.
+    Menyimpan nilai threshold yang dipilih dosen melalui slider.
+    Nilai disimpan dalam skala 0-100, konsisten dengan models.py.
     """
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
 
@@ -293,7 +313,6 @@ def update_threshold(id_sesi):
         flash('Nilai threshold tidak valid.', 'error')
         return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
 
-    # ── Validasi rentang 0-100 (Extension 2a) ──
     if not (0 <= threshold_value <= 100):
         flash(
             'Nilai threshold harus berada di antara 0% - 100%. '
@@ -308,5 +327,4 @@ def update_threshold(id_sesi):
     flash(f'Threshold berhasil diatur ke {threshold_value:.0f}%.', 'success')
 
     # TODO (sprint analisis): redirect ke halaman hasil klaster
-    # sebenarnya dan trigger commandClusterAnalysis()
     return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))

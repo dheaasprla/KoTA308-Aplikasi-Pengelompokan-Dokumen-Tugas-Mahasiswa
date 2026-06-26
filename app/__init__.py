@@ -38,5 +38,31 @@ def create_app(config_name='default'):
     def index():
         from flask import redirect, url_for
         return redirect(url_for('auth.login'))
+    
+    @app.errorhandler(413)
+    def request_entity_too_large(error):
+        from flask import redirect, url_for, flash, request as req
+        
+        # Ambil id_sesi dari URL yang sedang diakses.
+        # Format URL upload adalah /sesi/<id_sesi>/unggah,
+        # sehingga setelah split('/') hasilnya:
+        # ['', 'sesi', '2', 'unggah'] → index 2 adalah id_sesi
+        try:
+            parts = req.path.strip('/').split('/')
+            id_sesi = int(parts[1])
+        except (IndexError, ValueError):
+            id_sesi = None
+
+        max_total = app.config.get('MAX_TOTAL_SIZE_MB', 200)
+        flash(
+            f'Total ukuran file yang diunggah melebihi batas maksimal '
+            f'{max_total}MB. Kurangi jumlah atau ukuran file, '
+            f'lalu coba lagi.',
+            'error'
+        )
+
+        if id_sesi:
+            return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
+        return redirect(url_for('auth.login'))
 
     return app
