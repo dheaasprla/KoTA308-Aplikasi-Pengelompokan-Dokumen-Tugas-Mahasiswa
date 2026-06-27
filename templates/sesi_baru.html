@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>KoTA-308 | Sesi Analisis Baru</title>
+</head>
+<body>
+    <h1>Buat Sesi Analisis Baru</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                    <li style="color: {{ 'red' if category == 'error' else 'green' }}">
+                        {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('sesi.submit_session_data') }}">
+        <div>
+            <label for="mata_kuliah">Nama Mata Kuliah</label><br>
+            <input type="text" id="mata_kuliah" name="mata_kuliah">
+        </div>
+        <div>
+            <label for="kelas">Kelas</label><br>
+            <input type="text" id="kelas" name="kelas">
+        </div>
+        <br>
+        <button type="submit">Simpan / Lanjut</button>
+    </form>
+</body>
+</html>
