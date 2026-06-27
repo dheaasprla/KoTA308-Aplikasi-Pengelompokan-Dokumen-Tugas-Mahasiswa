@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, app
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
@@ -35,7 +35,11 @@ def create_app(config_name='default'):
     
     # Daftarkan blueprint analisis (UC-03: eksekusi analisis klaster)
     from app.analisis import analisis_bp
-    app.register_blueprint(analisis_bp, url_prefix='/analisis') 
+    app.register_blueprint(analisis_bp, url_prefix='/analisis')
+    
+    # Riwayat (UC-04: menampilkan riwayat analisis)
+    from app.riwayat import riwayat_bp
+    app.register_blueprint(riwayat_bp, url_prefix='/riwayat') 
 
     # Route redirect halaman utama ke login
     @app.route('/')
