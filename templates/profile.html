@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil - Sistem Pengelompokan Tugas Mahasiswa</title>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+    <!-- For local viewing without flask -->
+    <!-- <link rel="stylesheet" href="../static/css/sidebar.css"> -->
+    <!-- <link rel="stylesheet" href="../static/css/profile.css"> -->
+</head>
+
+<body>
+
+    <!-- Include Sidebar -->
+    {% set active_page = 'profil' %}
+    {% include 'sidebar.html' %}
+
+    <!-- Main Content wrapper -->
+    <main class="main-wrapper">
+
+        <!-- Page heading OUTSIDE card (top-left) -->
+        <div class="page-heading-area">
+            <h1 class="page-title">Profile</h1>
+            <p class="page-subtitle">Informasi Pengguna</p>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="profile-card">
+
+            <!-- Keluar button: top-right of card -->
+            <div class="card-top-bar">
+                <button class="btn-logout" onclick="window.location.href='{{ url_for('auth.logout') }}'">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
+                </button>
+            </div>
+
+            <!-- Avatar + Name + Separator + Detail -->
+            <div class="profile-content">
+
+                <!-- Avatar -->
+                <div class="profile-avatar-container">
+                    <div class="profile-avatar">
+                        <i class="fa-solid fa-user"></i>
+                        <!-- Jika ada foto: -->
+                        <!-- <img src="placeholder.jpg" alt="Profile Picture"> -->
+                    </div>
+                </div>
+
+                <!-- Nama User -->
+                <h2 class="profile-username">{{ user.nama }}</h2>
+
+                <!-- Garis pemisah -->
+                <hr class="profile-divider">
+
+                <!-- Personal Detail section -->
+                <div class="profile-detail-section">
+                    <div class="profile-section-header">
+                        <i class="fa-solid fa-user profile-section-icon"></i>
+                        <span class="profile-section-label">Personal Detail</span>
+                    </div>
+
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Nama Lengkap</div>
+                            <div class="detail-value">{{ user.nama }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Alamat Email</div>
+                            <div class="detail-value">{{ user.email }}</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Sidebar Script -->
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <!-- <script src="../static/js/sidebar.js"></script> -->
+</body>
+</html>
