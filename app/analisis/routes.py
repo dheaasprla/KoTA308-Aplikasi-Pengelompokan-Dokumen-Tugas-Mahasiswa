@@ -262,3 +262,107 @@ def sidebyside(id_detail):
         # dokumen_1, dokumen_2, persentase_kemiripan,
         # total_mirip, dari_cache
     }), 200
+    
+@analisis_bp.route('/klaster/<int:id_klaster>/matrix', methods=['GET'])
+@login_required
+def get_matrix_kemiripan(id_klaster):
+    """
+    Endpoint untuk mengambil data matrix kemiripan antar dokumen
+    dalam satu klaster. Dipanggil frontend saat halaman detail
+    klaster dibuka untuk merender tampilan matrix 2x2.
+ 
+    Data yang dikembalikan:
+        - Info klaster (skor tertinggi dan terendah)
+        - Daftar dokumen dalam klaster (untuk header baris/kolom)
+        - Semua pasangan kemiripan (untuk isi sel matrix)
+          termasuk id_detail untuk trigger sidebyside saat diklik
+ 
+    Returns:
+        JSON response:
+        {
+            "status": "selesai",
+            "id_klaster": 1,
+            "skor_tertinggi": 99.0,
+            "skor_terendah": 76.29,
+            "dokumen": [
+                {
+                    "id_dokumen": 44,
+                    "nama_file": "tugas_audit_dummy_1.pdf",
+                    "nama_tampil": "tugas_audit_dummy_1"
+                }
+            ],
+            "matrix": [
+                {
+                    "id_detail": 6,
+                    "id_dokumen1": 44,
+                    "id_dokumen2": 46,
+                    "persentase_kemiripan": 99.0,
+                    "sudah_diproses": true
+                }
+            ]
+        }
+    """
+    # ── Ambil data klaster ──
+    klaster = Klaster.query.get_or_404(id_klaster)
+ 
+    # ── Ambil semua anggota klaster ──
+    dokumen_klaster = DokumenKlaster.query.filter_by(
+        id_klaster=id_klaster
+    ).all()
+ 
+    # Ambil objek DokumenTugas untuk setiap anggota
+    dokumen_list = []
+    for dk in dokumen_klaster:
+        dok = DokumenTugas.query.get(dk.id_dokumen)
+        if dok:
+            dokumen_list.append(dok)
+ 
+    # Susun data dokumen untuk header matrix
+    # nama_tampil: nama file tanpa ekstensi untuk label yang lebih bersih
+    data_dokumen = [
+        {
+            "id_dokumen" : dok.id_dokumen,
+            "nama_file"  : dok.nama_file,
+            "nama_tampil": dok.nama_file.rsplit('.', 1)[0]
+            # rsplit('.', 1)[0] memisahkan nama file dari ekstensinya
+            # "tugas_audit_dummy_1 (2).pdf" → "tugas_audit_dummy_1 (2)"
+        }
+        for dok in dokumen_list
+    ]
+ 
+    # ── Ambil semua detail kemiripan dalam klaster ini ──
+    detail_list = DetailKemiripan.query.filter_by(
+        id_klaster=id_klaster
+    ).all()
+ 
+    # Susun data matrix untuk isi sel
+    # sudah_diproses: True jika highlight sudah ada di DB
+    # Frontend bisa pakai info ini untuk memberi indikator visual
+    # bahwa sel ini sudah pernah dibuka sebelumnya
+    data_matrix = [
+        {
+            "id_detail"           : detail.id_detail,
+            "id_dokumen1"         : detail.id_dokumen1,
+            "id_dokumen2"         : detail.id_dokumen2,
+            "persentase_kemiripan": detail.persentase_kemiripan,
+            "sudah_diproses"      : detail.kalimat_highlight1 is not None
+        }
+        for detail in detail_list
+    ]
+ 
+    # Urutkan dari skor tertinggi ke terendah
+    # agar pasangan paling mirip tampil pertama di list
+    data_matrix.sort(
+        key=lambda x: x["persentase_kemiripan"],
+        reverse=True
+    )
+ 
+    return jsonify({
+        "status"         : "selesai",
+        "id_klaster"     : id_klaster,
+        "skor_tertinggi" : klaster.skor_tertinggi,
+        "skor_terendah"  : klaster.skor_terendah,
+        "jumlah_dokumen" : len(data_dokumen),
+        "dokumen"        : data_dokumen,
+        "matrix"         : data_matrix
+    }), 200
