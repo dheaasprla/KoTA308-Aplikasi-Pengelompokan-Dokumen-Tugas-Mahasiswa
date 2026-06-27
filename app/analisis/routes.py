@@ -19,6 +19,7 @@ from itertools import combinations
 from flask import jsonify
 from app.analisis import analisis_bp
 from app.auth.routes import login_required
+from services.highlight_service import proses_highlight
 from models import (
     db, SesiAnalisis, DokumenTugas,
     Klaster, DokumenKlaster, DetailKemiripan
@@ -184,3 +185,80 @@ def jalankan_analisis_klaster(id_sesi):
         'edge_aktif'        : hasil['edge_aktif'],
         'threshold_dipakai' : hasil['threshold_dipakai']
     }), 200 
+    
+@analisis_bp.route('/detail/<int:id_detail>/sidebyside', methods=['POST'])
+@login_required
+def sidebyside(id_detail):
+    """
+    Endpoint untuk memproses dan menampilkan perbandingan
+    teks side-by-side antar dua dokumen dalam satu klaster.
+ 
+    Dipanggil oleh frontend ketika user mengklik sel pada
+    matrix kemiripan di halaman detail klaster.
+ 
+    Menangani dua skenario:
+        1. Highlight sudah ada di DB → return dari cache
+        2. Highlight belum ada → proses SBERT → simpan → return
+ 
+    Returns:
+        JSON response:
+        {
+            "status": "selesai",
+            "dokumen_1": {
+                "nama_file": "Dhea_Tugas1.pdf",
+                "kalimat": [
+                    {"indeks": 2, "kalimat": "teks kalimat..."},
+                ]
+            },
+            "dokumen_2": {
+                "nama_file": "Berliana_Tugas1.pdf",
+                "kalimat": [
+                    {"indeks": 7, "kalimat": "teks kalimat..."},
+                ]
+            },
+            "persentase_kemiripan": 87.32,
+            "total_mirip": 5,
+            "dari_cache": false
+        }
+    """
+    # ── Ambil detail kemiripan dari DB ──
+    detail = DetailKemiripan.query.get_or_404(id_detail)
+ 
+    # ── Ambil kedua dokumen ──
+    dokumen_1 = DokumenTugas.query.get_or_404(detail.id_dokumen1)
+    dokumen_2 = DokumenTugas.query.get_or_404(detail.id_dokumen2)
+ 
+    # ── Validasi teks dokumen tidak kosong ──
+    if not dokumen_1.teks_ekstraksi or not dokumen_2.teks_ekstraksi:
+        return jsonify({
+            'status': 'error',
+            'pesan' : 'Salah satu dokumen tidak memiliki teks yang bisa diproses.'
+        }), 400
+ 
+    # ── Ambil threshold dari sesi via klaster ──
+    # Alur: detail_kemiripan → klaster → sesi_analisis → threshold_awal
+    # Threshold ini dipakai konsisten untuk level dokumen maupun kalimat
+    klaster = Klaster.query.get_or_404(detail.id_klaster)
+    sesi    = SesiAnalisis.query.get_or_404(klaster.id_sesi)
+ 
+    # ── Proses highlight ──
+    # proses_highlight() menangani cek cache dan komputasi SBERT
+    hasil = proses_highlight(
+        detail,
+        dokumen_1,
+        dokumen_2,
+        sesi.threshold_awal
+    )
+ 
+    # ── Commit jika ada perubahan (highlight baru disimpan) ──
+    # Kalau dari cache, tidak ada perubahan di DB tapi commit
+    # tidak masalah karena SQLAlchemy hanya commit yang berubah
+    db.session.commit()
+ 
+    return jsonify({
+        'status': 'selesai',
+        **hasil
+        # **hasil menyebarkan semua key dari dict hasil:
+        # dokumen_1, dokumen_2, persentase_kemiripan,
+        # total_mirip, dari_cache
+    }), 200
