@@ -19,24 +19,6 @@ import fitz  # PyMuPDF
 ALLOWED_EXTENSION = '.pdf'
 
 
-# ============================================================
-# ⚠️  TODO: GANTI NILAI INI SETELAH ANALISIS EMPIRIS SELESAI
-#
-# Nilai 50 di bawah hanyalah PLACEHOLDER SEMENTARA.
-# Setelah tim selesai mengolah dataset dan mendapat nilai
-# minimum karakter dari hasil_analisis.xlsx, tambahkan
-# baris berikut di file .env lalu restart aplikasi:
-#
-#     MIN_TEXT_LENGTH=<nilai_dari_hasil_analisis>
-#
-# Contoh: jika minimum karakter dokumen valid dari data
-# adalah 312, maka tulis di .env:
-#     MIN_TEXT_LENGTH=312
-#
-# Nilai akan terbaca otomatis tanpa perlu ubah kode apapun.
-# Jika .env tidak mengandung MIN_TEXT_LENGTH, nilai fallback
-# 50 akan dipakai (baris di bawah ini).
-# ============================================================
 MIN_TEXT_LENGTH = int(os.getenv('MIN_TEXT_LENGTH', 50))
 # os.getenv('MIN_TEXT_LENGTH', 50) → baca variabel MIN_TEXT_LENGTH dari .env.
 # Argumen kedua (50) adalah nilai default jika variabel belum diset di .env.
