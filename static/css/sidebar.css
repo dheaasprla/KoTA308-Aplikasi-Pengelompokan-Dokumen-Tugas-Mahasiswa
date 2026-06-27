@@ -1,0 +1,315 @@
+/* ══════════════════════════════════════
+   KoTA-308: Premium Floating & Collapsible Sidebar CSS
+   ══════════════════════════════════════ */
+
+:root {
+    --sidebar-w: 260px;
+    --sidebar-collapsed-w: 80px;
+    --navy-color: #03254C;
+    --navy-dark: #051A33;
+    /* Modern Deep Navy as in the image mockup */
+    --navy-light: #E2E8F0;
+}
+
+/* ═══ FLOATING SIDEBAR BASE STYLE ═══ */
+.sidebar {
+    width: var(--sidebar-w);
+    background-color: var(--navy-dark);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    bottom: 20px;
+    height: calc(100vh - 40px);
+    z-index: 200;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    border-radius: 24px;
+    /* Rounded corners as in the image mockup */
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+/* Collapsed Mini-Sidebar State (Desktop) */
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-w);
+    padding: 24px 10px;
+}
+
+/* Hide text elements in collapsed state */
+.sidebar.collapsed span,
+.sidebar.collapsed .user-detail {
+    display: none !important;
+}
+
+/* Center menu elements in collapsed state */
+.sidebar.collapsed .menu-btn,
+.sidebar.collapsed .nav-link {
+    justify-content: center;
+    padding: 14px 0;
+    border-radius: 12px;
+}
+
+.sidebar.collapsed .menu-btn i,
+.sidebar.collapsed .nav-link i {
+    margin: 0;
+    font-size: 18px;
+    /* Slightly larger icons when collapsed */
+}
+
+/* Overlay for Mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* Hamburger button on top-left when collapsed (only visible on mobile) */
+.hamburger-fixed {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 198;
+    background-color: var(--navy-dark);
+    border: none;
+    color: #ffffff;
+    font-size: 18px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s, transform 0.15s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.hamburger-fixed:hover {
+    opacity: 0.85;
+}
+
+/* Sidebar Menu Button (inside sidebar) */
+.menu-btn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 10px 14px;
+    width: 100%;
+    margin-bottom: 16px;
+    white-space: nowrap;
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.menu-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.menu-btn i {
+    font-size: 16px;
+}
+
+/* Divider line */
+.sidebar-divider {
+    border: none;
+    border-top: 1.5px solid rgba(255, 255, 255, 0.12);
+    margin-bottom: 20px;
+}
+
+/* Sidebar Navigation Links */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 13.5px;
+    text-decoration: none;
+    margin-bottom: 6px;
+    transition: background 0.15s, color 0.15s;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.nav-link i {
+    width: 18px;
+    text-align: center;
+    font-size: 15px;
+}
+
+.nav-link:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Active State matching Figma mockup style (rounded card with light background) */
+.nav-link.active {
+    color: var(--navy-dark) !important;
+    background-color: var(--navy-light, #E2E8F0) !important;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* User profile box at bottom */
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    margin-top: auto;
+    background-color: rgba(255, 255, 255, 0.02);
+    transition: all 0.2s ease;
+}
+
+.sidebar-user:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Simplified profile block in collapsed state */
+.sidebar.collapsed .sidebar-user {
+    border: none;
+    background-color: transparent;
+    padding: 8px 0;
+    justify-content: center;
+}
+
+.user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navy-dark);
+    font-size: 18px;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.user-detail {
+    overflow: hidden;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.user-email {
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Offset main area */
+.main {
+    margin-left: calc(var(--sidebar-w) + 40px) !important;
+    /* Width of sidebar + spacing */
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main.expanded {
+    margin-left: calc(var(--sidebar-collapsed-w) + 40px) !important;
+    padding-left: 20px !important;
+    /* Override standard expand padding */
+}
+
+/* Responsive collapse rules for smaller screens */
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-310px);
+        /* Slide out completely including spacing */
+        width: var(--sidebar-w) !important;
+        left: 20px;
+    }
+
+    .sidebar.collapsed {
+        transform: translateX(-310px);
+    }
+
+    /* When active on mobile (sidebar open) */
+    .sidebar.active {
+        transform: translateX(0) !important;
+    }
+
+    /* Make sure text elements display when active on mobile */
+    .sidebar.active span,
+    .sidebar.active .user-detail {
+        display: flex !important;
+    }
+
+    .sidebar.active .sidebar-user {
+        border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+        background-color: rgba(255, 255, 255, 0.02) !important;
+        padding: 12px 14px !important;
+        justify-content: flex-start !important;
+    }
+
+    .sidebar.active .menu-btn,
+    .sidebar.active .nav-link {
+        justify-content: flex-start !important;
+        padding: 14px 16px !important;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    .hamburger-fixed.show {
+        display: flex;
+    }
+
+    .main {
+        margin-left: 0 !important;
+        padding: 24px 20px !important;
+    }
+}
+
+/* ─── Main Wrapper: ikut bergeser saat sidebar collapse ─── */
+.main-wrapper {
+    margin-left: calc(var(--sidebar-w) + 40px);
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-wrapper.expanded {
+    margin-left: calc(var(--sidebar-collapsed-w) + 40px);
+}
+
+@media (max-width: 992px) {
+    .main-wrapper {
+        margin-left: 0 !important;
+        padding: 24px 20px !important;
+    }
+}
