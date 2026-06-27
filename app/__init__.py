@@ -32,6 +32,10 @@ def create_app(config_name='default'):
     # Daftarkan blueprint sesi (UC-01 & UC-02)
     from app.sesi import sesi_bp
     app.register_blueprint(sesi_bp, url_prefix='/sesi')
+    
+    # Daftarkan blueprint analisis (UC-03: eksekusi analisis klaster)
+    from app.analisis import analisis_bp
+    app.register_blueprint(analisis_bp, url_prefix='/analisis') 
 
     # Route redirect halaman utama ke login
     @app.route('/')
