@@ -152,3 +152,5 @@ def google_callback():
     session['user_email'] = user.email
 
     return redirect(url_for('auth.profile'))
+
+    

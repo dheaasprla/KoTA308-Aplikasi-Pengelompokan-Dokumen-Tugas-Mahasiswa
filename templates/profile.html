@@ -27,7 +27,7 @@
 
         <!-- Page heading OUTSIDE card (top-left) -->
         <div class="page-heading-area">
-            <h1 class="page-title">Profile</h1>
+            <h1 class="page-title">Profil</h1>
             <p class="page-subtitle">Informasi Pengguna</p>
         </div>
 
@@ -36,9 +36,9 @@
 
             <!-- Keluar button: top-right of card -->
             <div class="card-top-bar">
-                <button class="btn-logout" onclick="window.location.href='{{ url_for('auth.logout') }}'">
+                <a class="btn-logout" href="{{ url_for('auth.logout') }}">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
-                </button>
+                </a>
             </div>
 
             <!-- Avatar + Name + Separator + Detail -->
@@ -63,7 +63,7 @@
                 <div class="profile-detail-section">
                     <div class="profile-section-header">
                         <i class="fa-solid fa-user profile-section-icon"></i>
-                        <span class="profile-section-label">Personal Detail</span>
+                        <span class="profile-section-label">Detail Pribadi</span>
                     </div>
 
                     <div class="detail-grid">
@@ -86,4 +86,5 @@
     <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
     <!-- <script src="../static/js/sidebar.js"></script> -->
 </body>
+
 </html>

@@ -1,0 +1,391 @@
+/* ═══════════ STATISTIC CARDS OVERRIDES ═══════════ */
+.stat-card.red-border {
+    border: 1.5px solid #B10000;
+}
+
+.stat-card.red-border .stat-icon-box {
+    background-color: rgba(255, 117, 117, 0.43);
+    color: #B10000;
+}
+
+.stat-card.red-border .stat-title,
+.stat-card.red-border .stat-value {
+    color: #B10000;
+}
+
+.stat-card.brown-border {
+    border: 1.5px solid #9A8000;
+}
+
+.stat-card.brown-border .stat-icon-box {
+    background-color: rgba(246, 255, 71, 0.47);
+    color: #9A8000;
+}
+
+.stat-card.brown-border .stat-title,
+.stat-card.brown-border .stat-value {
+    color: #9A8000;
+}
+
+/* ═══════════ DETAILED STYLES FOR HEATMAP MATRIX ═══════════ */
+.matrix-card {
+    background-color: #ffffff;
+    border: 1.5px solid #D1D5DB;
+    border-radius: 12px;
+    padding: 24px 32px;
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+    max-height: 500px;
+}
+
+.matrix-title-area {
+    margin-bottom: 20px;
+}
+
+.matrix-title-area h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 4px;
+}
+
+.matrix-title-area p {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.matrix-table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 350px;
+    width: 100%;
+    position: relative;
+}
+
+.matrix-table {
+    border-collapse: collapse;
+    width: max-content;
+}
+
+.matrix-table th,
+.matrix-table td {
+    border-right: 1.5px solid var(--navy);
+    border-bottom: 1.5px solid var(--navy);
+    padding: 14px 16px;
+    font-weight: 600;
+}
+
+.matrix-table th:last-child,
+.matrix-table td:last-child {
+    border-right: none;
+}
+
+.matrix-table tr:last-child th,
+.matrix-table tr:last-child td {
+    border-bottom: none;
+}
+
+.matrix-table th {
+    color: #000000;
+    font-weight: 700;
+}
+
+/* Baris header atas - diem saat scroll ke bawah */
+.matrix-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #f8f9fa;
+}
+
+/* Kolom pertama - diem saat geser ke kanan */
+.matrix-table tbody th {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background-color: #ffffff;
+    border-right: 2px solid #dee2e6;
+}
+
+/* Corner cell pojok kiri atas - diem saat scroll dan geser */
+.matrix-table thead th:first-child {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 3 !important;
+    background-color: #f8f9fa;
+}
+
+.matrix-table td {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+.matrix-table td.diagonal-cell {
+    font-weight: 500;
+    color: #64748B;
+    cursor: not-allowed;
+}
+
+.matrix-table td.similarity-cell {
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.matrix-table td.similarity-cell:hover {
+    background-color: #F1F5F9;
+}
+
+.matrix-table td.similarity-cell.active-cell {
+    box-shadow: inset 0 0 0 2.5px var(--navy);
+    font-weight: 800;
+}
+
+/* ═══════════ TEXT COMPARISON AREA STYLES ═══════════ */
+.comparison-card {
+    background-color: #ffffff;
+    border: 1.5px solid #D1D5DB;
+    border-radius: 12px;
+    padding: 24px 32px;
+    box-shadow: var(--shadow-sm);
+}
+
+.comparison-title-area {
+    margin-bottom: 20px;
+}
+
+.comparison-title-area h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 4px;
+}
+
+.comparison-title-area p {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.compare-column {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+}
+
+.compare-column:first-child {
+    border-right: 1.5px solid #CBD5E1;
+}
+
+.compare-header {
+    background-color: #E9ECF0;
+    color: #0F172A;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    border-bottom: 1.5px solid #CBD5E1;
+}
+
+.compare-body {
+    padding: 24px;
+    height: 400px;
+    overflow-y: scroll;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: #334155;
+    text-align: justify;
+}
+
+.compare-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.compare-body::-webkit-scrollbar-track {
+    background: #F1F5F9;
+}
+
+.compare-body::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 3px;
+}
+
+.compare-body::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+.highlight-direct {
+    color: #FF6E6E;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-weight: inherit;
+}
+
+/* ═══════════ LEGEND CONTAINER ═══════════ */
+.legend-container {
+    display: flex;
+    gap: 24px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    padding-top: 4px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.legend-dot.red-dot {
+    background-color: #FF6E6E;
+}
+
+@media (max-width: 992px) {
+    .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .compare-column:first-child {
+        border-right: none;
+        border-bottom: 1.5px solid #CBD5E1;
+    }
+}
+
+/* ═══════════ DATATABLES CUSTOM STYLE OVERRIDES ═══════════ */
+#tabel-dokumen-klaster {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1.5px solid var(--navy);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+#tabel-dokumen-klaster thead th {
+    background-color: #EAEBEF;
+    color: #000000;
+    font-weight: 700;
+    border-bottom: 1.5px solid var(--navy);
+    border-right: 1.5px solid var(--navy);
+    padding: 12px 16px;
+    text-align: center;
+}
+
+#tabel-dokumen-klaster thead th:last-child {
+    border-right: none;
+}
+
+#tabel-dokumen-klaster tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #E2E8F0;
+    border-right: 1.5px solid var(--navy);
+    background-color: #FFFFFF;
+    color: #1E293B;
+    font-size: 13px;
+    text-align: center;
+}
+
+#tabel-dokumen-klaster tbody td:last-child {
+    border-right: none;
+}
+
+#tabel-dokumen-klaster tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#tabel-dokumen-klaster tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+#tabel-dokumen-klaster tbody tr:hover td {
+    background-color: #F8FAFC !important;
+    cursor: default;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_processing,
+.dataTables_wrapper .dataTables_paginate {
+    color: #1E293B !important;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    margin-top: 12px;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    border: 1.5px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 6px 12px;
+    background-color: #FFFFFF;
+    color: #1E293B;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    margin-left: 8px;
+}
+
+.dataTables_wrapper .dataTables_filter input:focus {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(8, 44, 92, 0.15);
+}
+
+.dataTables_wrapper .dataTables_length select {
+    border: 1.5px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 4px 8px;
+    outline: none;
+    margin: 0 4px;
+}
+
+.dataTables_wrapper .dataTables_length select:focus {
+    border-color: var(--navy);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 8px !important;
+    border: 1.5px solid transparent !important;
+    padding: 6px 12px !important;
+    font-weight: 600 !important;
+    transition: all 0.15s !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #FFEDD5 !important;
+    border-color: #D97706 !important;
+    color: #9A3412 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: var(--navy) !important;
+    border-color: var(--navy) !important;
+    color: #FFFFFF !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:active {
+    color: #94A3B8 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    cursor: not-allowed;
+}

@@ -1,5 +1,7 @@
 ﻿import os
 import uuid
+import time
+from datetime import datetime
 from flask import (
     render_template, request, redirect, url_for,
     flash, session, current_app, jsonify
@@ -160,6 +162,12 @@ def confirm_batch_upload(id_sesi):
 @sesi_bp.route('/<int:id_sesi>/hasil-klaster', methods=['POST'])
 @login_required
 def update_threshold(id_sesi):
+    from services.embedding_service import embed_semua_dokumen
+    from services.similarity_service import hitung_similarity_matrix
+    from services.clustering_service import jalankan_clustering
+    from models import Klaster, DokumenKlaster, DetailKemiripan
+    from itertools import combinations
+
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
     try:
         threshold_value = float(request.form.get('threshold', ''))
@@ -173,8 +181,81 @@ def update_threshold(id_sesi):
 
     sesi.threshold_awal = threshold_value
     db.session.commit()
-    flash(f'Threshold berhasil diatur ke {threshold_value:.0f}%.', 'success')
-    return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
+
+    dokumen_list = DokumenTugas.query.filter_by(id_sesi=id_sesi).all()
+    if len(dokumen_list) < 2:
+        flash('Minimal 2 dokumen diperlukan untuk analisis.', 'error')
+        return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
+
+    klaster_lama = Klaster.query.filter_by(id_sesi=id_sesi).all()
+    if klaster_lama:
+        Klaster.query.filter_by(id_sesi=id_sesi).delete()
+        for dok in dokumen_list:
+            dok.is_outlier = False
+        db.session.flush()
+
+    # Catat waktu mulai analisis
+    waktu_mulai = time.time()
+
+    embeddings = embed_semua_dokumen(dokumen_list)
+    similarity_matrix = hitung_similarity_matrix(embeddings)
+    hasil = jalankan_clustering(similarity_matrix, threshold_value)
+
+    # Catat waktu selesai analisis
+    waktu_selesai = time.time()
+    waktu_proses_detik = round(waktu_selesai - waktu_mulai, 1)
+
+    for anggota_ids in hasil['kelompok']:
+        skor_dalam_klaster = []
+        for id_a, id_b in combinations(sorted(anggota_ids), 2):
+            key = tuple(sorted([id_a, id_b]))
+            skor = similarity_matrix.get(key, 0.0)
+            skor_dalam_klaster.append(round(skor * 100, 2))
+
+        skor_tertinggi = max(skor_dalam_klaster) if skor_dalam_klaster else 0.0
+        skor_terendah = min(skor_dalam_klaster) if skor_dalam_klaster else 0.0
+
+        klaster_baru = Klaster(
+            id_sesi=id_sesi,
+            skor_tertinggi=skor_tertinggi,
+            skor_terendah=skor_terendah
+        )
+        db.session.add(klaster_baru)
+        db.session.flush()
+
+        for id_dok in anggota_ids:
+            db.session.add(DokumenKlaster(
+                id_klaster=klaster_baru.id_klaster,
+                id_dokumen=id_dok
+            ))
+
+        for id_a, id_b in combinations(sorted(anggota_ids), 2):
+            key = tuple(sorted([id_a, id_b]))
+            skor = similarity_matrix.get(key, 0.0)
+            db.session.add(DetailKemiripan(
+                id_klaster=klaster_baru.id_klaster,
+                id_dokumen1=id_a,
+                id_dokumen2=id_b,
+                persentase_kemiripan=round(skor * 100, 2),
+                kalimat_highlight1=None,
+                kalimat_highlight2=None,
+            ))
+
+    for id_dok in hasil['outlier']:
+        dok = DokumenTugas.query.get(id_dok)
+        if dok:
+            dok.is_outlier = True
+
+    sesi.status = 'analyzed'
+    sesi.tanggal_selesai = datetime.now()
+    db.session.commit()
+
+    # Simpan waktu proses dan id_sesi terakhir ke Flask session
+    session[f'waktu_proses_{id_sesi}'] = waktu_proses_detik
+    session['last_id_sesi'] = id_sesi
+
+    flash(f'Analisis selesai! Threshold {threshold_value:.0f}%.', 'success')
+    return redirect(url_for('analisis.halaman_hasil_klaster', id_sesi=id_sesi))
 
 
 @sesi_bp.route('/baru/api', methods=['POST'])

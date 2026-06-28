@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KoTA-308 | Hasil Klaster</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hasil_klaster.css') }}" />
+</head>
+
+<body>
+
+    {% set active_page = 'hasil' %}
+    {% include 'sidebar.html' %}
+
+    <main class="main" id="mainContent">
+
+        <header class="header-container">
+            <div class="header-info">
+                <h1>Hasil Klaster</h1>
+                <div class="sub-info">
+                    <span>{{ total_dokumen }} Dokumen . Threshold {{ (threshold * 100)|int if threshold is defined else
+                        70 }}% . {{ sesi.tanggal_buat.strftime('%d %B %Y') }}</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="btn btn-outline" id="btn-reanalyze" data-sesi-id="{{ id_sesi }}">
+                    <i class="fa-solid fa-rotate"></i> Analisis Ulang
+                </button>
+                <div class="dropdown">
+                    <button type="button" class="btn btn-primary dropdown-toggle" id="btn-export-dropdown">
+                        <i class="fa-solid fa-download"></i> Unduh Laporan <i class="fa-solid fa-chevron-down"
+                            style="font-size: 10px; margin-left: 4px;"></i>
+                    </button>
+                    <div class="dropdown-menu" id="export-dropdown-menu">
+                        <a class="dropdown-item" href="#"><i class="fa-regular fa-file-excel"
+                                style="color: #1F7246; margin-right: 8px;"></i> Ekspor format Excel (.xlsx)</a>
+                        <a class="dropdown-item" href="#"><i class="fa-regular fa-file-pdf"
+                                style="color: #B00505; margin-right: 8px;"></i> Unduh format PDF (.pdf)</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="stat-grid">
+            <div class="stat-card blue-border">
+                <div class="stat-icon-box">
+                    <i class="fa-regular fa-file-pdf"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-title">Total Dokumen</div>
+                    <div class="stat-desc">PDF Diproses</div>
+                    <div class="stat-value">{{ total_dokumen }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card orange-border">
+                <div class="stat-icon-box">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-title">Klaster Terbentuk</div>
+                    <div class="stat-desc">Kelompok Kemiripan</div>
+                    <div class="stat-value">{{ total_klaster }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card green-border">
+                <div class="stat-icon-box">
+                    <i class="fa-regular fa-file"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-title">Dokumen Unik</div>
+                    <div class="stat-desc">Aman Dari Duplikasi</div>
+                    <div class="stat-value">{{ total_outlier }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card brown-border">
+                <div class="stat-icon-box">
+                    <i class="fa-regular fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-title">Waktu Proses</div>
+                    <div class="stat-desc">VS Waktu Proses Manual</div>
+                    <div class="stat-value">{{ waktu_proses }}</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="clustering-section">
+            <div class="section-header">
+                <div class="section-title">Hasil Klaster</div>
+                <button type="button" class="btn-sort">
+                    <i class="fa-solid fa-sort"></i> Urutkan
+                </button>
+            </div>
+
+            <div class="cluster-list">
+                {% if clusters is defined and clusters %}
+                {% for cluster in clusters %}
+                <div class="cluster-card">
+                    <div class="cluster-header-row">
+                        <div class="cluster-title-area">
+                            <span class="cluster-title" data-klaster-id="{{ cluster.id_klaster }}">{{ cluster.name
+                                }}</span>
+                            <span class="cluster-count-badge">{{ cluster.files|length }} Dokumen Terdeteksi</span>
+                        </div>
+                        <div class="cluster-score-area">
+                            <div class="score-info">
+                                <div class="score-label">Skor Kemiripan</div>
+                                <div class="score-value">
+                                    {{ (cluster.score_min * 100)|int }}% - {{ (cluster.score_max * 100)|int }}%
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right chevron-icon"></i>
+                        </div>
+                    </div>
+                    <div class="cluster-body">
+                        <div class="file-badge-container">
+                            {% for file in cluster.files %}
+                            <span class="file-badge" title="{{ file }}">{{ file }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="similarity-indicator-box">
+                            <div class="indicator-track">
+                                <div class="indicator-fill {% if cluster.score >= 0.88 %}red{% elif cluster.score >= 0.82 %}orange-red{% else %}orange{% endif %}"
+                                    data-score="{{ (cluster.score * 100)|int }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="cluster-card">
+                    <div class="cluster-header-row">
+                        <div class="cluster-title-area">
+                            <span class="cluster-title">Klaster 1</span>
+                            <span class="cluster-count-badge">3 Dokumen Terdeteksi</span>
+                        </div>
+                        <div class="cluster-score-area">
+                            <div class="score-info">
+                                <div class="score-label">Skor Kemiripan</div>
+                                <div class="score-value">78%-86%</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right chevron-icon"></i>
+                        </div>
+                    </div>
+                    <div class="cluster-body">
+                        <div class="file-badge-container">
+                            <span class="file-badge" title="Dhea.pdf">Dhea.pdf</span>
+                            <span class="file-badge" title="Berliana.pdf">Berliana.pdf</span>
+                            <span class="file-badge" title="Jihan.pdf">Jihan.pdf</span>
+                        </div>
+                        <div class="similarity-indicator-box">
+                            <div class="indicator-track">
+                                <div class="indicator-fill orange" style="width: 80%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="outliers-section">
+            <div class="section-title">Dokumen Unik (Outlier)</div>
+
+            <div class="outliers-banner">
+                <div class="outliers-left">
+                    <div class="outliers-title">{{ total_outlier }} Dokumen Unik Terdeteksi</div>
+                    <div class="outliers-desc">Dokumen ini tidak memiliki kemiripan &gt;= {{ (threshold * 100)|int if
+                        threshold is defined else 70 }}% dengan dokumen lainnya.</div>
+
+                    <!-- Container outlier tersembunyi yang expand ke bawah -->
+                    <div id="hidden-outliers-container"
+                        style="display:none; margin-top: 10px; flex-wrap: wrap; gap: 8px; max-height: 200px; overflow-y: auto;">
+                        {% if outliers and outliers|length > 2 %}
+                        {% for outlier in outliers[2:] %}
+                        <span class="outlier-badge" title="{{ outlier.nama_file }}">{{ outlier.nama_file }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="outliers-right-container">
+                    <div class="outliers-badges">
+                        {% if outliers and outliers|length > 0 %}
+                        {% for outlier in outliers[:2] %}
+                        <span class="outlier-badge" title="{{ outlier.nama_file }}">{{ outlier.nama_file }}</span>
+                        {% endfor %}
+                        {% if outliers|length > 2 %}
+                        <div class="outlier-badge more-badge" id="btn-more-outliers"
+                            title="Lihat {{ outliers|length - 2 }} dokumen unik lainnya">
+                            + {{ outliers|length - 2 }} lainnya
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <span style="font-size: 13px; color: #888;">Tidak ada dokumen outlier.</span>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn-view-all" id="btn-view-all-outliers">Lihat Semua</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/hasil_klaster.js') }}"></script>
+
+    {% include 'konfigurasi_threshold.html' %}
+</body>
+
+</html>

@@ -29,6 +29,9 @@ class DosenPengampu(db.Model):
         cascade='all, delete-orphan'
     )
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def __repr__(self):
         return f'<DosenPengampu {self.email}>'
 
@@ -62,6 +65,9 @@ class SesiAnalisis(db.Model):
     klaster          = db.relationship('Klaster',         backref='sesi', lazy='dynamic', cascade='all, delete-orphan')
     laporan_evaluasi = db.relationship('LaporanEvaluasi', backref='sesi', lazy='dynamic', cascade='all, delete-orphan')
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def __repr__(self):
         return f'<SesiAnalisis {self.nama_matkul} - {self.kelas}>'
 
@@ -86,6 +92,9 @@ class DokumenTugas(db.Model):
     klaster_relations   = db.relationship('DokumenKlaster', backref='dokumen', lazy='dynamic', cascade='all, delete-orphan')
     detail_sebagai_dok1 = db.relationship('DetailKemiripan', foreign_keys='DetailKemiripan.id_dokumen1', backref='dokumen1', lazy='dynamic')
     detail_sebagai_dok2 = db.relationship('DetailKemiripan', foreign_keys='DetailKemiripan.id_dokumen2', backref='dokumen2', lazy='dynamic')
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def __repr__(self):
         return f'<DokumenTugas {self.nama_file}>'
@@ -114,6 +123,9 @@ class Klaster(db.Model):
     dokumen_relations = db.relationship('DokumenKlaster',  backref='klaster', lazy='dynamic', cascade='all, delete-orphan')
     detail_kemiripan  = db.relationship('DetailKemiripan', backref='klaster', lazy='dynamic', cascade='all, delete-orphan')
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def __repr__(self):
         return f'<Klaster {self.id_klaster} skor={self.skor_terendah}-{self.skor_tertinggi}>'
 
@@ -127,6 +139,9 @@ class DokumenKlaster(db.Model):
 
     id_dokumen = db.Column(db.Integer, db.ForeignKey('dokumen_tugas.id_dokumen', ondelete='CASCADE'), primary_key=True)
     id_klaster = db.Column(db.Integer, db.ForeignKey('klaster.id_klaster',       ondelete='CASCADE'), primary_key=True)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def __repr__(self):
         return f'<DokumenKlaster dok={self.id_dokumen} klaster={self.id_klaster}>'
@@ -153,6 +168,9 @@ class DetailKemiripan(db.Model):
         db.CheckConstraint('persentase_kemiripan BETWEEN 0 AND 100', name='ck_persentase_range'),
     )
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def __repr__(self):
         return f'<DetailKemiripan dok{self.id_dokumen1}-dok{self.id_dokumen2} {self.persentase_kemiripan}%>'
 
@@ -172,6 +190,9 @@ class LaporanEvaluasi(db.Model):
     __table_args__ = (
         db.CheckConstraint("format_file IN ('pdf', 'xlsx')", name='ck_format_laporan'),
     )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def __repr__(self):
         return f'<LaporanEvaluasi sesi={self.id_sesi} format={self.format_file}>'

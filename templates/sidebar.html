@@ -9,20 +9,25 @@
         <i class="fa-solid fa-bars"></i> <span>Menu</span>
     </button>
     <hr class="sidebar-divider" />
-    <a href="{{ url_for('sesi.form_sesi_baru') }}"
-       class="nav-link {% if active_page == 'unggah' %}active{% endif %}">
+    <a href="{{ url_for('sesi.form_sesi_baru') }}" class="nav-link {% if active_page == 'unggah' %}active{% endif %}">
         <i class="fa-solid fa-file-arrow-up"></i> <span>Unggah Dokumen</span>
     </a>
-    <a href="#"
-       class="nav-link {% if active_page == 'hasil' %}active{% endif %}">
+    {% if session.get('last_id_sesi') %}
+    <a href="{{ url_for('analisis.halaman_hasil_klaster', id_sesi=session.get('last_id_sesi')) }}"
+        class="nav-link {% if active_page == 'hasil' %}active{% endif %}">
         <i class="fa-solid fa-circle-nodes"></i> <span>Hasil Klaster</span>
     </a>
-    <a href="#"
-       class="nav-link {% if active_page == 'riwayat' %}active{% endif %}">
+    {% else %}
+    <a href="{{ url_for('riwayat.halaman_riwayat') }}"
+        class="nav-link {% if active_page == 'hasil' %}active{% endif %}">
+        <i class="fa-solid fa-circle-nodes"></i> <span>Hasil Klaster</span>
+    </a>
+    {% endif %}
+    <a href="{{ url_for('riwayat.halaman_riwayat') }}"
+        class="nav-link {% if active_page == 'riwayat' %}active{% endif %}">
         <i class="fa-solid fa-clock-rotate-left"></i> <span>Riwayat</span>
     </a>
-    <a href="{{ url_for('auth.profile') }}"
-       class="sidebar-user" style="text-decoration: none; cursor: pointer;">
+    <a href="{{ url_for('auth.profile') }}" class="sidebar-user" style="text-decoration: none; cursor: pointer;">
         <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
         <div class="user-detail">
             <div class="user-name">{{ session.get('user_nama', 'Pengguna') }}</div>

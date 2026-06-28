@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KoTA-308 | Detail Klaster</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hasil_klaster.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/detail_klaster.css') }}" />
+</head>
+
+<body>
+
+    {% set active_page = 'hasil' %}
+    {% include 'sidebar.html' %}
+
+    <main class="main" id="mainContent">
+
+        <header class="header-container">
+            <div class="header-info">
+                <h1>Detail Klaster - {{ cluster_name|default('Klaster 1') }}</h1>
+                <div class="sub-info">
+                    <span>{{ files|length }} Dokumen . Threshold {{ (threshold * 100)|int }}%</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="/analisis/sesi/{{ id_sesi }}/hasil" class="btn btn-outline" id="btn-back">
+                    <i class="fa-solid fa-chevron-left"></i> Kembali ke Hasil Klaster
+                </a>
+            </div>
+        </header>
+
+        <section class="stat-grid">
+            <div class="stat-card blue-border">
+                <div class="stat-icon-box">
+                    <i class="fa-regular fa-file-pdf"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-title">Total Dokumen</div>
+                    <div class="stat-desc">PDF Diproses</div>
+                    <div class="stat-value">{{ files|length }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card red-border">
+                <div class="stat-icon-box">
+                    <i class="fa-solid fa-arrow-up-right-dots"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-title">Skor Tertinggi</div>
+                    <div class="stat-desc">Kemiripan Maksimal</div>
+                    <div class="stat-value">{{ (max_similarity * 100)|int }}%</div>
+                </div>
+            </div>
+
+            <div class="stat-card green-border">
+                <div class="stat-icon-box">
+                    <i class="fa-solid fa-arrow-down-short-wide"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-title">Skor Terendah</div>
+                    <div class="stat-desc">Kemiripan Minimal</div>
+                    <div class="stat-value">{{ (min_similarity * 100)|int }}%</div>
+                </div>
+            </div>
+
+            <div class="stat-card brown-border">
+                <div class="stat-icon-box">
+                    <i class="fa-solid fa-chart-simple"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-title">Rata - rata Skor</div>
+                    <div class="stat-desc">Kemiripan Rata-rata</div>
+                    <div class="stat-value">{{ (avg_similarity * 100)|int }}%</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="matrix-card">
+            <div class="matrix-title-area">
+                <h2>Matriks Kemiripan Antar Dokumen</h2>
+                <p>Klik sel untuk melihat perbandingan teks</p>
+            </div>
+
+            <div class="matrix-table-container"
+                style="max-height: 250px; max-width: 1090px; overflow-x: auto; overflow-y: auto;">
+                <table class="matrix-table">
+                    <thead>
+                        <tr>
+                            <th>Dokumen</th>
+                            {% for file in files %}
+                            <th>{{ file }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row_file in files %}
+                        {% set outer_idx = loop.index0 %}
+                        <tr>
+                            <th>{{ row_file }}</th>
+                            {% for col_file in files %}
+                            {% if row_file == col_file %}
+                            <td class="diagonal-cell">-</td>
+                            {% else %}
+                            {% set val = (matrix[outer_idx][loop.index0] * 100)|int %}
+                            <td class="similarity-cell {% if val >= 80 %}level-high{% elif val >= 70 %}level-medium{% else %}level-low{% endif %}"
+                                data-doc1="{{ row_file }}" data-doc2="{{ col_file }}" data-score="{{ val }}%"
+                                data-id-detail="{{ id_detail_map.get(row_file + '_' + col_file, '') }}">
+                                {{ val }}%
+                            </td>
+                            {% endif %}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="comparison-card">
+            <div class="comparison-title-area">
+                <h2>Perbandingan Teks</h2>
+                <p>Klik sel pada matriks di atas untuk memilih pasangan</p>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="compare-column">
+                    <div class="compare-header" id="compare-doc1-title">-</div>
+                    <div class="compare-body" id="compare-doc1-body">
+                        <p style="color:#888; font-style:italic;">Klik sel pada matriks untuk melihat perbandingan teks.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="compare-column">
+                    <div class="compare-header" id="compare-doc2-title">-</div>
+                    <div class="compare-body" id="compare-doc2-body">
+                        <p style="color:#888; font-style:italic;">Klik sel pada matriks untuk melihat perbandingan teks.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="legend-container">
+                <div class="legend-item">
+                    <div class="legend-dot red-dot"></div>
+                    <span>Terindikasi parafrasa</span>
+                </div>
+            </footer>
+        </section>
+
+    </main>
+
+    <div id="klaster-meta" data-id-klaster="{{ id_klaster }}" data-id-sesi="{{ id_sesi }}" style="display:none;"></div>
+
+    <div id="text-pairs-data"
+        data-pairs="{{ text_pairs|tojson|safe if text_pairs is defined and text_pairs else '{}' }}"
+        style="display: none;"></div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="{{ url_for('static', filename='js/detail_klaster.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+</body>
+
+</html>

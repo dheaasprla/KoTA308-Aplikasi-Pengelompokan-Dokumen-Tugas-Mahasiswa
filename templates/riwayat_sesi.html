@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KoTA-308 | Riwayat Sesi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/riwayat_sesi.css') }}" />
+</head>
+
+<body>
+
+    {% set active_page = 'riwayat' %}
+    {% include 'sidebar.html' %}
+
+    <main class="main" id="mainContent">
+
+        <div class="header-row">
+            <div class="header-title-area">
+                <h1 class="page-title">Riwayat Sesi</h1>
+                <p class="page-subtitle">Semua sesi analisis yang pernah dijalankan</p>
+            </div>
+            <a href="{{ url_for('sesi.form_sesi_baru') }}" class="btn-new-analysis">
+                <i class="fa-solid fa-plus"></i> Analisis Baru
+            </a>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-grid">
+            <div class="stat-card sesi">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-title">Total Sesi</span>
+                    <span class="stat-sub">Semua sesi analisis</span>
+                    <span class="stat-number" id="stat-total-sesi">-</span>
+                </div>
+            </div>
+
+            <div class="stat-card dokumen">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-file-lines"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-title">Total Dokumen</span>
+                    <span class="stat-sub" id="stat-sub-dokumen">Dari semua sesi</span>
+                    <span class="stat-number" id="stat-total-dokumen">-</span>
+                </div>
+            </div>
+
+            <div class="stat-card terakhir">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-title">Sesi Terakhir</span>
+                    <span class="stat-sub" id="stat-tanggal-terakhir">-</span>
+                    <span class="stat-number" id="stat-sesi-terakhir">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-container">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%">Sesi</th>
+                        <th style="width: 20%">Tanggal</th>
+                        <th style="width: 15%">Jumlah Dokumen</th>
+                        <th style="width: 18%">Status</th>
+                        <th style="width: 12%">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align:center; color:#888; padding: 24px;">
+                            Memuat data riwayat...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <!-- Modal Konfirmasi Hapus -->
+    <div class="modal-backdrop" id="deleteModalBackdrop">
+        <div class="confirm-modal">
+            <div class="modal-header">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <h3 class="modal-title">Hapus Riwayat Sesi</h3>
+            </div>
+            <div class="modal-body">
+                Apakah Anda yakin ingin menghapus riwayat sesi
+                <strong id="deleteTargetSession"></strong>?
+                Data yang dihapus tidak dapat dikembalikan.
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal cancel" onclick="closeDeleteModal()">Batal</button>
+                <button class="btn-modal danger" id="btnConfirmDelete">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/riwayat_sesi.js') }}"></script>
+</body>
+
+</html>
