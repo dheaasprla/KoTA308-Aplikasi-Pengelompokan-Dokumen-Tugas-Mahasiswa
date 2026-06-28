@@ -1,4 +1,4 @@
-<style>
+﻿<style>
     .modal-backdrop {
         display: none;
         position: fixed;
@@ -153,13 +153,12 @@
                 Sistem menggunakan threshold default 70%, yang dapat diubah sebelum analisis dimulai.
             </p>
 
-            <form action="/hasil-klaster" method="POST" id="form-threshold">
+            <form action="#" method="POST" id="form-threshold">
                 <div class="threshold-control-row">
                     <input type="range" name="threshold" id="input-threshold" min="0" max="100"
-                        value="{{ (threshold * 100)|int if threshold is defined else 70 }}" class="premium-slider">
+                        value="70" class="premium-slider">
                     <div class="threshold-display">
-                        <span id="threshold-display-val">{{ (threshold * 100)|int if threshold is defined else 70
-                            }}</span>%
+                        <span id="threshold-display-val">70</span>%
                     </div>
                 </div>
 
@@ -232,3 +231,4 @@
         }
     });
 </script>
+
