@@ -1,8 +1,4 @@
-<!-- ═══════════ SIDEBAR ═══════════ -->
-<!-- File: templates/sidebar.html -->
-<!-- Cara pakai di template lain: include 'sidebar.html' -->
-
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
+﻿<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <button class="hamburger-fixed" id="hamburgerFixed">
     <i class="fa-solid fa-bars"></i>
@@ -13,20 +9,24 @@
         <i class="fa-solid fa-bars"></i> <span>Menu</span>
     </button>
     <hr class="sidebar-divider" />
-    <a href="{{ url_for('index') }}" class="nav-link {% if active_page == 'unggah' %}active{% endif %}">
+    <a href="{{ url_for('sesi.form_sesi_baru') }}"
+       class="nav-link {% if active_page == 'unggah' %}active{% endif %}">
         <i class="fa-solid fa-file-arrow-up"></i> <span>Unggah Dokumen</span>
     </a>
-    <a href="{{ url_for('halaman_hasil_klaster') }}" class="nav-link {% if active_page == 'hasil' %}active{% endif %}">
+    <a href="{{ '#' }}"
+       class="nav-link {% if active_page == 'hasil' %}active{% endif %}">
         <i class="fa-solid fa-circle-nodes"></i> <span>Hasil Klaster</span>
     </a>
-    <a href="{{ url_for('riwayat_sesi') }}" class="nav-link {% if active_page == 'riwayat' %}active{% endif %}">
+    <a href="#"
+       class="nav-link {% if active_page == 'riwayat' %}active{% endif %}">
         <i class="fa-solid fa-clock-rotate-left"></i> <span>Riwayat</span>
     </a>
-    <a href="{{ url_for('profil') }}" class="sidebar-user" style="text-decoration: none; cursor: pointer;">
+    <a href="{{ url_for('auth.profile') }}"
+       class="sidebar-user" style="text-decoration: none; cursor: pointer;">
         <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
         <div class="user-detail">
-            <div class="user-name">Jhon Doe</div>
-            <div class="user-email">jhondoe@gmail.com</div>
+            <div class="user-name">{{ session.get('user_nama', 'Pengguna') }}</div>
+            <div class="user-email">{{ session.get('user_email', '') }}</div>
         </div>
     </a>
 </aside>

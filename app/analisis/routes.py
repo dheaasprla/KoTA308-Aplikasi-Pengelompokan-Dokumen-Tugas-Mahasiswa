@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 # FILE: app/analisis/routes.py
 # Routes untuk UC-03 (Eksekusi Analisis Klaster)
 #
@@ -8,7 +8,7 @@
 # Pipeline yang dijalankan:
 #   1. Validasi sesi dan dokumen
 #   2. Cek apakah sudah pernah dianalisis (re-clustering)
-#   3. Embed semua dokumen → hitung similarity → clustering
+#   3. Embed semua dokumen â†’ hitung similarity â†’ clustering
 #   4. Simpan hasil klaster dengan skor_tertinggi & skor_terendah
 #   5. Simpan detail kemiripan antar pasangan dalam klaster
 #   6. Tandai dokumen outlier
@@ -16,7 +16,7 @@
 # ============================================================
 
 from itertools import combinations
-from flask import jsonify
+from flask import jsonify, render_template
 from app.analisis import analisis_bp
 from app.auth.routes import login_required
 from models import (
@@ -51,10 +51,10 @@ def jalankan_analisis_klaster(id_sesi):
             "threshold_dipakai": 70.0
         }
     """
-    # ── Validasi sesi ──
+    # â”€â”€ Validasi sesi â”€â”€
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
 
-    # ── Validasi dokumen ──
+    # â”€â”€ Validasi dokumen â”€â”€
     dokumen_list = DokumenTugas.query.filter_by(
         id_sesi=id_sesi
     ).all()
@@ -65,7 +65,7 @@ def jalankan_analisis_klaster(id_sesi):
             'pesan' : 'Minimal 2 dokumen diperlukan untuk analisis.'
         }), 400
 
-    # ── Cek apakah sudah pernah dianalisis (re-clustering) ──
+    # â”€â”€ Cek apakah sudah pernah dianalisis (re-clustering) â”€â”€
     # Jika Klaster sudah ada untuk sesi ini, hapus semua hasil lama.
     # ondelete='CASCADE' di models.py memastikan DokumenKlaster dan
     # DetailKemiripan ikut terhapus otomatis saat Klaster dihapus.
@@ -80,7 +80,7 @@ def jalankan_analisis_klaster(id_sesi):
 
         db.session.flush()
 
-    # ── Step 1: Embed semua dokumen ──
+    # â”€â”€ Step 1: Embed semua dokumen â”€â”€
     # Mengubah setiap teks_ekstraksi menjadi vektor 768 dimensi
     # menggunakan pipeline chunking dari utils/chunking.py.
     embeddings = embed_semua_dokumen(dokumen_list)
@@ -91,12 +91,12 @@ def jalankan_analisis_klaster(id_sesi):
             'pesan' : 'Tidak cukup dokumen yang berhasil di-embed.'
         }), 400
 
-    # ── Step 2: Hitung cosine similarity semua pasangan ──
+    # â”€â”€ Step 2: Hitung cosine similarity semua pasangan â”€â”€
     # Menghasilkan dict {(id_a, id_b): skor 0.0-1.0} untuk semua
     # kombinasi pasangan unik (complete graph sebelum threshold).
     similarity_matrix = hitung_similarity_matrix(embeddings)
 
-    # ── Step 3: Jalankan graph-based clustering ──
+    # â”€â”€ Step 3: Jalankan graph-based clustering â”€â”€
     # Membangun graf, memangkas edge di bawah threshold,
     # mendeteksi connected components via BFS NetworkX.
     hasil = jalankan_clustering(
@@ -104,7 +104,7 @@ def jalankan_analisis_klaster(id_sesi):
         sesi.threshold_awal  # skala 0-100, konversi di dalam fungsi
     )
 
-    # ── Step 4: Simpan hasil kelompok ke DB ──
+    # â”€â”€ Step 4: Simpan hasil kelompok ke DB â”€â”€
     for anggota_ids in hasil['kelompok']:
 
         # Hitung skor_tertinggi dan skor_terendah dari semua pasangan
@@ -162,18 +162,18 @@ def jalankan_analisis_klaster(id_sesi):
                 kalimat_highlight2  =None,
             ))
 
-    # ── Step 5: Tandai dokumen outlier ──
+    # â”€â”€ Step 5: Tandai dokumen outlier â”€â”€
     for id_dok in hasil['outlier']:
         dok = DokumenTugas.query.get(id_dok)
         if dok:
             dok.is_outlier = True
 
-    # ── Step 6: Update status sesi ──
+    # â”€â”€ Step 6: Update status sesi â”€â”€
     # 'analyzed' sesuai CHECK constraint di models.py:
     # status IN ('uploaded', 'analyzed', 'completed')
     sesi.status = 'analyzed'
 
-    # ── Commit semua perubahan ke DB sekaligus ──
+    # â”€â”€ Commit semua perubahan ke DB sekaligus â”€â”€
     db.session.commit()
 
     return jsonify({
@@ -184,3 +184,39 @@ def jalankan_analisis_klaster(id_sesi):
         'edge_aktif'        : hasil['edge_aktif'],
         'threshold_dipakai' : hasil['threshold_dipakai']
     }), 200 
+
+@analisis_bp.route('/sesi/<int:id_sesi>/hasil', methods=['GET'])
+@login_required
+def halaman_hasil_klaster(id_sesi):
+    sesi = SesiAnalisis.query.get_or_404(id_sesi)
+    
+    klaster_list = Klaster.query.filter_by(id_sesi=id_sesi).all()
+    
+    clusters = []
+    for k in klaster_list:
+        dokumen_ids = [dk.id_dokumen for dk in k.dokumen_relations]
+        dokumen_list = DokumenTugas.query.filter(
+            DokumenTugas.id_dokumen.in_(dokumen_ids)
+        ).all()
+        clusters.append({
+            'id_klaster': k.id_klaster,
+            'name': f'Klaster {k.id_klaster}',
+            'score_min': round(k.skor_terendah / 100, 2),
+            'score_max': round(k.skor_tertinggi / 100, 2),
+            'score': round((k.skor_terendah + k.skor_tertinggi) / 200, 2),
+            'files': [d.nama_file for d in dokumen_list]
+        })
+    
+    outliers = DokumenTugas.query.filter_by(
+        id_sesi=id_sesi,
+        is_outlier=True
+    ).all()
+    outlier_list = [{'nama_file': d.nama_file} for d in outliers]
+    
+    return render_template(
+        'hasil_klaster.html',
+        sesi=sesi,
+        clusters=clusters,
+        outliers=outlier_list,
+        threshold=sesi.threshold_awal / 100
+    )

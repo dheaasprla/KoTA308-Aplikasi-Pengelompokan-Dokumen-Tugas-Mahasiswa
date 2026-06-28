@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -36,7 +36,7 @@
 
             <!-- Keluar button: top-right of card -->
             <div class="card-top-bar">
-                <button class="btn-logout" onclick="window.location.href='{{ url_for('login') }}'">
+                <button class="btn-logout" onclick="window.location.href='{{ url_for('auth.login') }}'">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
                 </button>
             </div>
@@ -53,8 +53,8 @@
                     </div>
                 </div>
 
-                <!-- Nama User -->
-                <h2 class="profile-username">Nama User</h2>
+                <!-- {{ user.nama }} -->
+                <h2 class="profile-username">{{ user.nama }}</h2>
 
                 <!-- Garis pemisah -->
                 <hr class="profile-divider">
@@ -69,11 +69,11 @@
                     <div class="detail-grid">
                         <div class="detail-item">
                             <div class="detail-label">Nama Lengkap</div>
-                            <div class="detail-value">Jhon Doe</div>
+                            <div class="detail-value">{{ user.nama }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Alamat Email</div>
-                            <div class="detail-value">jhondoe@gmail.com</div>
+                            <div class="detail-value">{{ user.email }}</div>
                         </div>
                     </div>
                 </div>
