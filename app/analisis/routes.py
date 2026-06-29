@@ -331,18 +331,9 @@ def halaman_hasil_klaster(id_sesi):
             menit = int(waktu_proses_detik // 60)
             detik = round(waktu_proses_detik % 60, 1)
             waktu_proses = f'{menit}m {detik}s'
-    elif sesi.tanggal_selesai and sesi.tanggal_buat:
-        selisih = sesi.tanggal_selesai - sesi.tanggal_buat
-        total_detik = round(selisih.total_seconds(), 1)
-        if total_detik < 60:
-            waktu_proses = f'{total_detik}s'
-        else:
-            menit = int(total_detik // 60)
-            detik = round(total_detik % 60, 1)
-            waktu_proses = f'{menit}m {detik}s'
     else:
         waktu_proses = '-'
-
+        
     return render_template(
         'hasil_klaster.html',
         sesi=sesi,
