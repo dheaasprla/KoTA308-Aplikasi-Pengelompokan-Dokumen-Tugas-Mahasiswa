@@ -54,7 +54,6 @@
         background: none;
         border: none;
         color: #EF4444;
-        /* Merah */
         font-size: 20px;
         font-weight: 900;
         cursor: pointer;
@@ -109,6 +108,16 @@
         border: none;
     }
 
+    /* Slider disabled state */
+    .premium-slider:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .premium-slider:disabled::-webkit-slider-thumb {
+        cursor: not-allowed;
+    }
+
     .threshold-display {
         font-size: 13px;
         font-weight: 700;
@@ -131,18 +140,38 @@
         font-weight: 600;
         border-radius: 20px;
         cursor: pointer;
-        transition: var(--transition);
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 160px;
+        justify-content: center;
     }
 
     .btn-submit-analysis:hover {
         background-color: #021a36;
+    }
+
+    .btn-submit-analysis:disabled {
+        background-color: #021a36;
+        cursor: not-allowed;
+        opacity: 0.85;
+    }
+
+    .fa-spin {
+        animation: fa-spin 1s linear infinite;
+    }
+
+    @keyframes fa-spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>
 
 <div class="modal-backdrop" id="modal-threshold">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>Kofigurasi Treshold Kemiripan</h2>
+            <h2>Konfigurasi Threshold Kemiripan</h2>
             <button type="button" class="btn-close-modal" id="btn-close-modal">
                 <i class="fa-solid fa-xmark"></i>
             </button>
@@ -163,8 +192,9 @@
                 </div>
 
                 <div class="modal-actions-center">
-                    <button type="submit" class="btn-submit-analysis">
-                        Mulai Analisis
+                    <button type="submit" class="btn-submit-analysis" id="btn-submit-analysis">
+                        <i class="fa-solid fa-play" id="icon-submit"></i>
+                        <span id="label-submit">Mulai Analisis</span>
                     </button>
                 </div>
             </form>
@@ -179,6 +209,10 @@
         const btnCloseModal = document.getElementById('btn-close-modal');
         const inputThreshold = document.getElementById('input-threshold');
         const thresholdDisplayVal = document.getElementById('threshold-display-val');
+        const formThreshold = document.getElementById('form-threshold');
+        const btnSubmit = document.getElementById('btn-submit-analysis');
+        const iconSubmit = document.getElementById('icon-submit');
+        const labelSubmit = document.getElementById('label-submit');
 
         if (btnReanalyze) {
             btnReanalyze.addEventListener('click', function (e) {
@@ -187,13 +221,14 @@
                 const icon = this.querySelector('i');
                 if (icon) {
                     icon.classList.add('fa-spin');
-                    // Berhentikan putaran ikon setelah modal terbuka penuh
                     setTimeout(() => {
                         icon.classList.remove('fa-spin');
                     }, 500);
                 }
 
-                // Tampilkan backdrop modal
+                // Reset tombol dan slider ke kondisi awal saat modal dibuka
+                resetModal();
+
                 modalBackdrop.style.display = 'flex';
                 setTimeout(() => {
                     modalBackdrop.classList.add('show');
@@ -201,12 +236,10 @@
             });
         }
 
-        // Tutup modal saat mengklik tombol X merah
         if (btnCloseModal) {
             btnCloseModal.addEventListener('click', closeModal);
         }
 
-        // Tutup modal saat mengklik area di luar modal-card (backdrop)
         if (modalBackdrop) {
             modalBackdrop.addEventListener('click', function (e) {
                 if (e.target === modalBackdrop) {
@@ -216,6 +249,9 @@
         }
 
         function closeModal() {
+            // Jangan bisa tutup modal kalau analisis sedang berjalan
+            if (btnSubmit && btnSubmit.disabled) return;
+
             modalBackdrop.classList.remove('show');
             modalBackdrop.classList.remove('active');
             setTimeout(() => {
@@ -223,12 +259,55 @@
             }, 250);
         }
 
-        // Hubungkan input range slider ke tampilan persentase real-time
+        function resetModal() {
+            // Reset slider ke aktif
+            if (inputThreshold) {
+                inputThreshold.disabled = false;
+            }
+            // Reset tombol ke kondisi awal
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+            }
+            if (iconSubmit) {
+                iconSubmit.className = 'fa-solid fa-play';
+            }
+            if (labelSubmit) {
+                labelSubmit.textContent = 'Mulai Analisis';
+            }
+        }
+
         if (inputThreshold && thresholdDisplayVal) {
             inputThreshold.addEventListener('input', function () {
                 thresholdDisplayVal.textContent = this.value;
             });
         }
+
+        // Handle submit form
+        if (formThreshold) {
+            formThreshold.addEventListener('submit', function () {
+                // Disable slider supaya tidak bisa diubah
+                if (inputThreshold) {
+                    inputThreshold.disabled = false; // tetap enabled supaya value terkirim
+                    inputThreshold.style.pointerEvents = 'none';
+                    inputThreshold.style.opacity = '0.5';
+                }
+
+                // Ubah tombol jadi loading state
+                if (btnSubmit) {
+                    btnSubmit.disabled = true;
+                }
+                if (iconSubmit) {
+                    iconSubmit.className = 'fa-solid fa-arrows-rotate fa-spin';
+                }
+                if (labelSubmit) {
+                    labelSubmit.textContent = 'Menganalisis...';
+                }
+
+                // Sembunyikan tombol close modal
+                if (btnCloseModal) {
+                    btnCloseModal.style.display = 'none';
+                }
+            });
+        }
     });
 </script>
-
