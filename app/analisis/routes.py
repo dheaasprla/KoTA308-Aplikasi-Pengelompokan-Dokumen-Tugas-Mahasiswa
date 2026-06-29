@@ -223,6 +223,15 @@ def sidebyside(id_detail):
     """
     # ── Ambil detail kemiripan dari DB ──
     detail = DetailKemiripan.query.get_or_404(id_detail)
+    
+    # ── Cek skor kemiripan, jika 0% tidak perlu diproses ──
+    if detail.persentase_kemiripan == 0:
+        return jsonify({
+            'status' : 'tidak_ada_kemiripan',
+            'pesan'  : 'Dokumen ini tidak memiliki kemiripan dengan '
+                       'dokumen pasangannya sehingga perbandingan '
+                       'tidak dapat ditampilkan.'
+        }), 200
  
     # ── Ambil kedua dokumen ──
     dokumen_1 = DokumenTugas.query.get_or_404(detail.id_dokumen1)
