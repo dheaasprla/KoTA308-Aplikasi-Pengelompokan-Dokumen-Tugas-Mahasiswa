@@ -38,10 +38,14 @@
                             style="font-size: 10px; margin-left: 4px;"></i>
                     </button>
                     <div class="dropdown-menu" id="export-dropdown-menu">
-                        <a class="dropdown-item" href="#"><i class="fa-regular fa-file-excel"
-                                style="color: #1F7246; margin-right: 8px;"></i> Ekspor format Excel (.xlsx)</a>
-                        <a class="dropdown-item" href="#"><i class="fa-regular fa-file-pdf"
-                                style="color: #B00505; margin-right: 8px;"></i> Unduh format PDF (.pdf)</a>
+                        <a class="dropdown-item" id="btn-export-excel" href="#">
+                            <i class="fa-regular fa-file-excel" style="color: #1F7246; margin-right: 8px;"></i>
+                            Ekspor format Excel (.xlsx)
+                        </a>
+                        <a class="dropdown-item" id="btn-export-pdf" href="#">
+                            <i class="fa-regular fa-file-pdf" style="color: #B00505; margin-right: 8px;"></i>
+                            Unduh format PDF (.pdf)
+                        </a>
                     </div>
                 </div>
             </div>
@@ -137,32 +141,9 @@
                 </div>
                 {% endfor %}
                 {% else %}
-                <div class="cluster-card">
-                    <div class="cluster-header-row">
-                        <div class="cluster-title-area">
-                            <span class="cluster-title">Klaster 1</span>
-                            <span class="cluster-count-badge">3 Dokumen Terdeteksi</span>
-                        </div>
-                        <div class="cluster-score-area">
-                            <div class="score-info">
-                                <div class="score-label">Skor Kemiripan</div>
-                                <div class="score-value">78%-86%</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right chevron-icon"></i>
-                        </div>
-                    </div>
-                    <div class="cluster-body">
-                        <div class="file-badge-container">
-                            <span class="file-badge" title="Dhea.pdf">Dhea.pdf</span>
-                            <span class="file-badge" title="Berliana.pdf">Berliana.pdf</span>
-                            <span class="file-badge" title="Jihan.pdf">Jihan.pdf</span>
-                        </div>
-                        <div class="similarity-indicator-box">
-                            <div class="indicator-track">
-                                <div class="indicator-fill orange" style="width: 80%;"></div>
-                            </div>
-                        </div>
-                    </div>
+                <div
+                    style="text-align:center; color:#888; padding: 24px; background:#fff; border-radius: 12px; border: 1.5px solid #D1D5DB;">
+                    Belum ada hasil klaster. Silakan jalankan analisis terlebih dahulu.
                 </div>
                 {% endif %}
             </div>
@@ -177,7 +158,6 @@
                     <div class="outliers-desc">Dokumen ini tidak memiliki kemiripan &gt;= {{ (threshold * 100)|int if
                         threshold is defined else 70 }}% dengan dokumen lainnya.</div>
 
-                    <!-- Container outlier tersembunyi yang expand ke bawah -->
                     <div id="hidden-outliers-container"
                         style="display:none; margin-top: 10px; flex-wrap: wrap; gap: 8px; max-height: 200px; overflow-y: auto;">
                         {% if outliers and outliers|length > 2 %}

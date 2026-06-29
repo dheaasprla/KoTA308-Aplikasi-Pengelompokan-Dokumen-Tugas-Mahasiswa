@@ -72,7 +72,6 @@ function renderTabel(riwayat) {
                 </td>
                 <td>${tanggal}</td>
                 <td>${sesi.jumlah_dokumen} File</td>
-                <td>${statusBadge}</td>
                 <td>
                     <div class="action-cell">
                         <a href="${linkHasil}" class="btn-action open" title="Buka Sesi">

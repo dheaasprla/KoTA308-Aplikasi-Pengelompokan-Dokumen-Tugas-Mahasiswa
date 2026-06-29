@@ -27,7 +27,6 @@ function initAccordion() {
         header.addEventListener('click', function () {
             const card = this.closest('.cluster-card');
             const clusterId = card.querySelector('.cluster-title').getAttribute('data-klaster-id');
-            const sesiId = document.getElementById('btn-reanalyze').getAttribute('data-sesi-id');
 
             window.location.href = `/analisis/klaster/${clusterId}/detail`;
         });
@@ -64,15 +63,41 @@ function initOutliersToggle() {
 function initExportDropdown() {
     const dropdownToggle = document.getElementById('btn-export-dropdown');
     const dropdownMenu = document.getElementById('export-dropdown-menu');
+    const btnExcelLink = document.getElementById('btn-export-excel');
+    const btnPdfLink = document.getElementById('btn-export-pdf');
+    const sesiId = document.getElementById('btn-reanalyze')?.getAttribute('data-sesi-id');
+
+    // Set href dinamis berdasarkan id_sesi
+    if (sesiId) {
+        if (btnExcelLink) btnExcelLink.href = `/analisis/sesi/${sesiId}/ekspor/excel`;
+        if (btnPdfLink) btnPdfLink.href = `/analisis/sesi/${sesiId}/ekspor/pdf`;
+    }
 
     if (dropdownToggle && dropdownMenu) {
         dropdownToggle.addEventListener('click', function (e) {
             e.stopPropagation();
+
+            // Loading state saat klik dropdown
+            const originalContent = this.innerHTML;
             dropdownMenu.classList.toggle('show');
         });
 
         document.addEventListener('click', function () {
             dropdownMenu.classList.remove('show');
+        });
+    }
+
+    // Loading state saat klik download Excel
+    if (btnExcelLink) {
+        btnExcelLink.addEventListener('click', function () {
+            showToast('Mengunduh Excel...', 'File Excel sedang disiapkan, harap tunggu.', 'info');
+        });
+    }
+
+    // Loading state saat klik download PDF
+    if (btnPdfLink) {
+        btnPdfLink.addEventListener('click', function () {
+            showToast('Mengunduh PDF...', 'File PDF sedang disiapkan, harap tunggu.', 'info');
         });
     }
 }

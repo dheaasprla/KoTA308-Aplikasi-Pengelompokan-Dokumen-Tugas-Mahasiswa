@@ -1,4 +1,4 @@
-﻿import os
+import os
 import uuid
 import time
 from datetime import datetime
@@ -180,6 +180,24 @@ def update_threshold(id_sesi):
         threshold_value = current_app.config['DEFAULT_THRESHOLD']
 
     sesi.threshold_awal = threshold_value
+    
+    # ── Reset kalimat_highlight saat threshold diubah ──
+    # Highlight lama tidak relevan lagi karena threshold baru
+    # akan menghasilkan pasangan kalimat yang berbeda.
+    # DetailKemiripan yang baru akan dibuat saat jalankan_analisis_klaster
+    # dipanggil (cascade delete klaster lama → detail lama terhapus).
+    # Tapi untuk sesi yang belum di-re-cluster, reset highlight dulu
+    # agar tidak tampil highlight dengan threshold lama.
+    from models import Klaster, DetailKemiripan
+    klaster_list = Klaster.query.filter_by(id_sesi=id_sesi).all()
+    for klaster in klaster_list:
+        detail_list = DetailKemiripan.query.filter_by(
+            id_klaster=klaster.id_klaster
+        ).all()
+        for detail in detail_list:
+            detail.kalimat_highlight1 = None
+            detail.kalimat_highlight2 = None
+            
     db.session.commit()
 
     dokumen_list = DokumenTugas.query.filter_by(id_sesi=id_sesi).all()

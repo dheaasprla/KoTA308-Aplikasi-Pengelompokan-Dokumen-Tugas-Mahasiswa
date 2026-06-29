@@ -46,6 +46,12 @@ document.addEventListener('DOMContentLoaded', function () {
         })
             .then(res => res.json())
             .then(data => {
+                if (data.status === 'tidak_ada_kemiripan') {
+                    doc1BodyEl.innerHTML = `<p style="color:#64748B; font-style:italic;">${escHtml(data.pesan)}</p>`;
+                    doc2BodyEl.innerHTML = `<p style="color:#64748B; font-style:italic;">${escHtml(data.pesan)}</p>`;
+                    return;
+                }
+
                 if (data.status !== 'selesai') {
                     doc1BodyEl.innerHTML = '<p style="color:red;">Gagal memuat data.</p>';
                     doc2BodyEl.innerHTML = '<p style="color:red;">Gagal memuat data.</p>';
