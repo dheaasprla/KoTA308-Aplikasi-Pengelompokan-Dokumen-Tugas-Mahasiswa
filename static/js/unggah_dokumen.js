@@ -82,20 +82,38 @@
         alert('File "' + f.name + '" bukan PDF. Hanya file .pdf yang diterima.');
         return;
       }
-      if (fileList.length + toAdd.length >= MAX_FILES) {
-        alert('Batas maksimal ' + MAX_FILES + ' file tercapai.');
-        return;
-      }
+
       var sizeMB = f.size / (1024 * 1024);
+
       if (sizeMB > MAX_FILE_MB) {
-        alert('File "' + f.name + '" melebihi batas ' + MAX_FILE_MB + 'MB.');
+        var fileSizeError = document.getElementById('fileSizeError');
+        if (fileSizeError) {
+          fileSizeError.textContent = 'File "' + f.name + '" melebihi batas ' + MAX_FILE_MB + 'MB.';
+          fileSizeError.style.display = 'block';
+          setTimeout(function() {
+            fileSizeError.style.display = 'none';
+          }, 4000);
+        }
         return;
       }
+
+      if (fileList.length + toAdd.length >= MAX_FILES) {
+        var maxFileError = document.getElementById('maxFileError');
+        if (maxFileError) {
+          maxFileError.style.display = 'block';
+          setTimeout(function() {
+            maxFileError.style.display = 'none';
+          }, 4000);
+        }
+        return;
+      }
+
       var totalBaru = toAdd.reduce(function (a, b) { return a + b.sizeMB; }, 0);
       if (usedMB + totalBaru + sizeMB > MAX_TOTAL_MB) {
         alert('Kuota penuh! Tidak bisa menambah "' + f.name + '".');
         return;
       }
+
       toAdd.push({ name: f.name, sizeMB: sizeMB, fileObj: f });
     });
 
@@ -280,7 +298,6 @@
     }
 
     if (fileList.length === 0) {
-      alert('Belum ada berkas yang dipilih.');
       return;
     }
 
