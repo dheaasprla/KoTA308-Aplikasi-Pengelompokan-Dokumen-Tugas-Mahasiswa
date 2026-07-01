@@ -1,8 +1,8 @@
 ﻿(function () {
 
-  var MAX_TOTAL_MB = 200;
+  var MAX_TOTAL_MB = 175;
   var MAX_FILE_MB = 5;
-  var MAX_FILES = 32;
+  var MAX_FILES = 35;
   var CIRCUMFERENCE = 2 * Math.PI * 48;
 
   var usedMB = 0;
@@ -232,11 +232,11 @@
 
     elQuotaPct.textContent  = Math.round(pctMB) + '% dari kuota digunakan';
     elQuotaFill.style.width = pctMB.toFixed(1) + '%';
-    elSizeUsed.textContent  = usedMB.toFixed(1) + 'MB/200MB';
+    elSizeUsed.textContent  = usedMB.toFixed(1) + 'MB/175MB';
     elSizeRem.textContent   = rem.toFixed(1) + 'MB';
 
     elDonutArc.style.strokeDashoffset = (CIRCUMFERENCE * (1 - pctF)).toFixed(2);
-    elDonutCount.textContent          = total + '/32';
+    elDonutCount.textContent          = total + '/35';
     elDonutArc.style.stroke           = '#B00505';
     elQuotaFill.style.background      = '#B00505';
 
