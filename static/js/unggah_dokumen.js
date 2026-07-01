@@ -35,6 +35,11 @@
   var modalThreshold = document.getElementById('modal-threshold');
   var formThreshold  = document.getElementById('form-threshold');
 
+  var matkulInput = document.getElementById('mata_kuliah');
+  var kelasInput  = document.getElementById('kelas');
+  var matkulError = document.getElementById('matkulRequiredError');
+  var kelasError  = document.getElementById('kelasRequiredError');
+
   function initDonut() {
     elDonutArc.style.fill             = 'none';
     elDonutArc.style.stroke           = '#B00505';
@@ -233,20 +238,47 @@
     fileList = [];
     usedMB = 0;
     currentSessionId = null;
-    document.getElementById('mata_kuliah').value = '';
-    document.getElementById('kelas').value = '';
+    matkulInput.value = '';
+    kelasInput.value = '';
+    hideFieldError(matkulError, matkulInput);
+    hideFieldError(kelasError, kelasInput);
     renderGrid();
     updateQuota();
   });
 
-  btnNext.addEventListener('click', function () {
-    var matkul = document.getElementById('mata_kuliah').value.trim();
-    var kelas  = document.getElementById('kelas').value.trim();
+  function showFieldError(errorEl, inputEl) {
+    errorEl.style.display = 'block';
+    inputEl.style.boxShadow = '0 0 0 2px #B00505';
+  }
 
-    if (!matkul || !kelas) {
-      alert('Harap isi Nama Mata Kuliah dan Kelas terlebih dahulu.');
+  function hideFieldError(errorEl, inputEl) {
+    errorEl.style.display = 'none';
+    inputEl.style.boxShadow = '';
+  }
+
+  btnNext.addEventListener('click', function () {
+    var matkul = matkulInput.value.trim();
+    var kelas  = kelasInput.value.trim();
+    var hasError = false;
+
+    if (!matkul) {
+      showFieldError(matkulError, matkulInput);
+      hasError = true;
+    } else {
+      hideFieldError(matkulError, matkulInput);
+    }
+
+    if (!kelas) {
+      showFieldError(kelasError, kelasInput);
+      hasError = true;
+    } else {
+      hideFieldError(kelasError, kelasInput);
+    }
+
+    if (hasError) {
       return;
     }
+
     if (fileList.length === 0) {
       alert('Belum ada berkas yang dipilih.');
       return;

@@ -38,7 +38,6 @@
             color: var(--black);
         }
 
-        /* ══ MAIN ══ */
         .main {
             flex: 1;
             padding: 30px 30px 36px;
@@ -58,7 +57,6 @@
             margin-bottom: 18px;
         }
 
-        /* ══ ALERT ══ */
         .alert {
             background: var(--warn-fill);
             border: 1px solid var(--warn-stroke);
@@ -78,7 +76,6 @@
             flex-shrink: 0;
         }
 
-        /* ══ TOP GRID ══ */
         .top-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -99,7 +96,6 @@
             gap: 14px;
         }
 
-        /* ══ CARD INFORMASI ══ */
         .card {
             background: var(--card-white);
             border-radius: 14px;
@@ -155,7 +151,6 @@
             box-shadow: 0 0 0 2px var(--navy);
         }
 
-        /* ══ QUOTA CARD + DONUT ══ */
         .quota-card {
             background: #F6F3F1;
             border-radius: 14px;
@@ -294,7 +289,6 @@
             line-height: 1.3;
         }
 
-        /* ══ UPLOAD ZONE ══ */
         .upload-zone {
             border: 2.5px dashed var(--navy);
             border-radius: 14px;
@@ -355,7 +349,6 @@
             opacity: 0.83;
         }
 
-        /* ══ BATASAN SISTEM ══ */
         .warn-card {
             background: var(--warn-fill);
             border: 1px solid var(--warn-stroke);
@@ -396,7 +389,6 @@
             font-size: 13px;
         }
 
-        /* ══ BERKAS TERUNGGAH ══ */
         .files-section {
             background: #ffffff;
             border-radius: 16px;
@@ -508,7 +500,6 @@
             color: var(--red);
         }
 
-        /* ══ FOOTER ══ */
         .footer {
             display: flex;
             justify-content: flex-end;
@@ -554,7 +545,6 @@
             cursor: not-allowed;
         }
 
-        /* ══ MODAL BACKDROP ══ */
         .modal-backdrop {
             display: none;
             position: fixed;
@@ -569,7 +559,6 @@
             display: flex;
         }
 
-        /* ══ MODAL UPLOAD ══ */
         .modal-upload {
             background: #fff;
             border-radius: 16px;
@@ -687,7 +676,6 @@
             background: #fff0f0;
         }
 
-        /* ══ MODAL THRESHOLD ══ */
         .modal-threshold-card {
             background: #fff;
             border-radius: 16px;
@@ -768,11 +756,9 @@
 
 <body>
 
-    <!-- ═══════════ SIDEBAR (partial) ═══════════ -->
     {% set active_page = 'unggah' %}
     {% include 'sidebar.html' %}
 
-    <!-- ═══════════ MAIN ═══════════ -->
     <main class="main" id="mainContent">
         <h1 class="page-title">Unggah Dokumen</h1>
         <p class="page-subtitle">Isi detail sesi dan unggah berkas tugas mahasiswa (.pdf)</p>
@@ -789,11 +775,13 @@
                     <div class="card-subtitle">Hanya isi nama mata kuliah, kelas, dan threshold</div>
                     <div class="form-group">
                         <label for="mata_kuliah">Nama Mata Kuliah</label>
-                        <input type="text" id="mata_kuliah" name="mata_kuliah" autocomplete="off">
+                        <input type="text" id="mata_kuliah" name="mata_kuliah" autocomplete="off" maxlength="100">
+                        <span class="error-message" id="matkulRequiredError" style="display:none; color:#EF4444; font-size:12px; margin-top:5px;">Nama Mata Kuliah wajib diisi.</span>
                     </div>
                     <div class="form-group">
                         <label for="kelas">Kelas</label>
-                        <input type="text" id="kelas" name="kelas" autocomplete="off">
+                        <input type="text" id="kelas" name="kelas" autocomplete="off" maxlength="20">
+                        <span class="error-message" id="kelasRequiredError" style="display:none; color:#EF4444; font-size:12px; margin-top:5px;">Kelas wajib diisi.</span>
                     </div>
                 </div>
 
@@ -841,7 +829,7 @@
                     <input type="file" id="hiddenInput" accept=".pdf" multiple style="display:none;">
                     <i class="fa-solid fa-cloud-arrow-up cloud-icon"></i>
                     <div class="upload-title">Drag and drop your files here</div>
-                    <div class="upload-sub">PDF formats, up to 50 MB</div>
+                    <div class="upload-sub">PDF formats, up to 5 MB per file</div>
                     <button type="button" class="btn-select" id="btn-select-trigger">Select File</button>
                 </div>
                 <div class="warn-card">
@@ -856,7 +844,6 @@
             </div>
         </div>
 
-        <!-- Grid berkas: tersembunyi sampai file selesai diproses -->
         <div class="files-section" id="files-section" style="display:none;">
             <div class="files-header-row">
                 <div class="files-title">Berkas Terunggah</div>
@@ -873,7 +860,6 @@
         </div>
     </main>
 
-    <!-- ══ MODAL: Mengunggah Dokumen ══ -->
     <div class="modal-backdrop" id="modal-loading">
         <div class="modal-upload">
             <div class="modal-upload-header">
@@ -894,13 +880,9 @@
         </div>
     </div>
 
-    <!-- ══ MODAL: Konfigurasi Threshold ══ -->
     {% include 'konfigurasi_threshold.html' %}
 
-    <!-- ══ SCRIPTS ══ -->
-    <!-- 1. Sidebar toggle -->
     <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
-    <!-- 3. Logika utama halaman -->
     <script src="{{ url_for('static', filename='js/unggah_dokumen.js') }}"></script>
 
 </body>

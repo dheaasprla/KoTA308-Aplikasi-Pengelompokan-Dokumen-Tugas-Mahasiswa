@@ -6,19 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sistem Pengelompokan Tugas Mahasiswa</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
-    <!-- For local viewing without flask, uncomment this and comment the above -->
-    <!-- <link rel="stylesheet" href="../static/css/auth.css"> -->
 </head>
 
 <body>
     <div class="auth-container">
-        <!-- Left Side: Illustration -->
         <div class="auth-left">
             <img src="{{ url_for('static', filename='images/image_9b1523.png') }}" alt="Illustration"
                 class="auth-illustration">
         </div>
 
-        <!-- Right Side: Login Form -->
         <div class="auth-right">
             <div class="auth-form-wrapper">
                 <img src="{{ url_for('static', filename='images/image_909eb7.png') }}" alt="Logo SPTM"
@@ -31,19 +27,20 @@
                     style="color: #ff4d4f; margin-bottom: 15px; font-weight: 500; text-align: center;">{{ error }}</p>
                 {% endif %}
 
-                <form id="loginForm" action="{{ url_for('auth.login') }}" method="POST">
+                <form id="loginForm" action="{{ url_for('auth.login') }}" method="POST" novalidate>
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" id="email" name="email" class="form-control" placeholder="Masukkan Email"
-                            required>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="Masukkan Email" maxlength="150">
                         <span class="error-message" id="emailError">Format email tidak valid (harus mengandung
                             '@')</span>
+                        <span class="error-message" id="emailRequiredError" style="display:none;">Email wajib diisi.</span>
                     </div>
 
                     <div class="form-group">
                         <label for="password">Kata sandi</label>
                         <input type="password" id="password" name="password" class="form-control"
-                            placeholder="Masukkan Kata Sandi" required>
+                            placeholder="Masukkan Kata Sandi">
+                        <span class="error-message" id="passwordRequiredError" style="display:none;">Kata sandi wajib diisi.</span>
                     </div>
 
                     <button type="submit" class="btn btn-primary" id="loginBtn">Masuk</button>
@@ -54,7 +51,6 @@
                 <a href="{{ url_for('auth.google_login') }}" class="btn btn-outline"
                     style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px;">
                     Lanjutkan dengan Google
-                    <!-- Google SVG Icon on the RIGHT -->
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
                             d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36365H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z"
@@ -78,7 +74,7 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/auth.js') }}" onerror="this.src='../static/js/auth.js'"></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 </body>
 
 </html>

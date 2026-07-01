@@ -1,62 +1,93 @@
 document.addEventListener('DOMContentLoaded', function () {
     const emailInput = document.getElementById('email');
     const emailError = document.getElementById('emailError');
+    const emailRequiredError = document.getElementById('emailRequiredError');
     const passwordInput = document.getElementById('password');
+    const passwordRequiredError = document.getElementById('passwordRequiredError');
     const confirmPasswordInput = document.getElementById('confirm_password');
+    const confirmRequiredError = document.getElementById('confirmRequiredError');
     const passwordError = document.getElementById('passwordError');
     const registerBtn = document.getElementById('registerBtn');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
 
-    // ─── Fungsi Shake ───────────────────────────────────────────
     function triggerShake(element) {
         element.classList.remove('shake');
-        void element.offsetWidth; // reset animasi biar bisa dipicu ulang
+        void element.offsetWidth;
         element.classList.add('shake');
         setTimeout(function () {
             element.classList.remove('shake');
         }, 400);
     }
 
-    // ─── Handle Submit Form Login ────────────────────────────────
+    function showFieldError(errorEl, inputEl) {
+        if (errorEl) errorEl.style.display = 'block';
+        if (inputEl) {
+            inputEl.style.borderColor = '#EF4444';
+            triggerShake(inputEl);
+        }
+    }
+
+    function hideFieldError(errorEl, inputEl) {
+        if (errorEl) errorEl.style.display = 'none';
+        if (inputEl) inputEl.style.borderColor = '#CBD5E1';
+    }
+
     if (loginForm) {
         loginForm.addEventListener('submit', function (e) {
-            const inputs = loginForm.querySelectorAll('input[required]');
-            let hasEmpty = false;
+            let hasError = false;
 
-            inputs.forEach(function (input) {
-                if (!input.value.trim()) {
-                    triggerShake(input);
-                    hasEmpty = true;
-                }
-            });
+            if (!emailInput.value.trim()) {
+                showFieldError(emailRequiredError, emailInput);
+                hasError = true;
+            } else {
+                hideFieldError(emailRequiredError, emailInput);
+            }
 
-            if (hasEmpty) {
+            if (!passwordInput.value.trim()) {
+                showFieldError(passwordRequiredError, passwordInput);
+                hasError = true;
+            } else {
+                hideFieldError(passwordRequiredError, passwordInput);
+            }
+
+            if (hasError) {
                 e.preventDefault();
             }
         });
     }
 
-    // ─── Handle Submit Form Register ────────────────────────────
     if (registerForm) {
         registerForm.addEventListener('submit', function (e) {
-            const inputs = registerForm.querySelectorAll('input[required]');
-            let hasEmpty = false;
+            let hasError = false;
 
-            inputs.forEach(function (input) {
-                if (!input.value.trim()) {
-                    triggerShake(input);
-                    hasEmpty = true;
-                }
-            });
+            if (!emailInput.value.trim()) {
+                showFieldError(emailRequiredError, emailInput);
+                hasError = true;
+            } else {
+                hideFieldError(emailRequiredError, emailInput);
+            }
 
-            if (hasEmpty) {
+            if (!passwordInput.value.trim()) {
+                showFieldError(passwordRequiredError, passwordInput);
+                hasError = true;
+            } else {
+                hideFieldError(passwordRequiredError, passwordInput);
+            }
+
+            if (!confirmPasswordInput.value.trim()) {
+                showFieldError(confirmRequiredError, confirmPasswordInput);
+                hasError = true;
+            } else {
+                hideFieldError(confirmRequiredError, confirmPasswordInput);
+            }
+
+            if (hasError) {
                 e.preventDefault();
             }
         });
     }
 
-    // ─── Validasi Email Real-time ────────────────────────────────
     if (emailInput && emailError) {
         emailInput.addEventListener('input', function () {
             const emailValue = emailInput.value;
@@ -67,11 +98,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 emailError.style.display = 'none';
                 emailInput.style.borderColor = '#CBD5E1';
             }
+            if (emailValue.trim()) hideFieldError(emailRequiredError, emailInput);
             checkFormValidity();
         });
     }
 
-    // ─── Validasi Password Real-time ─────────────────────────────
     function validatePassword() {
         if (!passwordInput || !confirmPasswordInput || !passwordError || !registerBtn) return;
 
@@ -87,6 +118,9 @@ document.addEventListener('DOMContentLoaded', function () {
             confirmPasswordInput.style.borderColor = '#CBD5E1';
             registerBtn.disabled = false;
         }
+
+        if (passwordValue.trim()) hideFieldError(passwordRequiredError, passwordInput);
+        if (confirmPasswordValue.trim()) hideFieldError(confirmRequiredError, confirmPasswordInput);
     }
 
     if (passwordInput && confirmPasswordInput) {
@@ -103,19 +137,4 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
-
-    // ─── Ubah pesan validasi bawaan browser ke Bahasa Indonesia ───
-    document.querySelectorAll('input[required]').forEach(function (input) {
-        input.addEventListener('invalid', function () {
-            if (input.value.trim() === '') {
-                input.setCustomValidity('Mohon isi kolom ini.');
-            } else {
-                input.setCustomValidity('');
-            }
-        });
-
-        input.addEventListener('input', function () {
-            input.setCustomValidity('');
-        });
-    });
 });
