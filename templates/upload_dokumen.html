@@ -6,8 +6,8 @@
 </head>
 <body>
     <h1>Upload Dokumen — {{ sesi.nama_matkul }} ({{ sesi.kelas }})</h1>
-    <p>Total file terunggah: {{ sesi.total_file_terunggah }} / 32</p>
-    <p>Ukuran terpakai: {{ sesi.ukuran_terpakai_mb }} MB / 200 MB</p>
+    <p>Total file terunggah: {{ sesi.total_file_terunggah }} / 35</p>
+    <p>Ukuran terpakai: {{ sesi.ukuran_terpakai_mb }} MB / 175 MB</p>
     <p>Threshold saat ini: {{ sesi.threshold_awal|int }}%</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
