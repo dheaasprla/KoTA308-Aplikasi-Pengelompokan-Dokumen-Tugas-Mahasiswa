@@ -71,7 +71,16 @@
         font-size: 13px;
         color: #94A3B8;
         line-height: 1.6;
-        margin-bottom: 32px;
+        margin-bottom: 16px;
+        text-align: left;
+        font-weight: 500;
+    }
+
+    .slider-hint {
+        font-size: 13px;
+        color: #94A3B8;
+        line-height: 1.6;
+        margin-bottom: 24px;
         text-align: left;
         font-weight: 500;
     }
@@ -178,14 +187,17 @@
         </div>
         <div class="modal-body">
             <p class="modal-description">
-                Tentukan batas minimum persentase kemiripan untuk mendeteksi duplikasi dokumen.
+                Tentukan batas persentase kemiripan untuk mendeteksi duplikasi dokumen.
                 Sistem menggunakan threshold default 70%, yang dapat diubah sebelum analisis dimulai.
+            </p>
+            <p class="slider-hint">
+                Geser slider ke kiri untuk menurunkan nilai threshold, atau ke kanan untuk menaikkannya.
             </p>
 
             <form action="#" method="POST" id="form-threshold">
                 <div class="threshold-control-row">
                     <input type="range" name="threshold" id="input-threshold" min="0" max="100"
-                        value="70" class="premium-slider">
+                        value="70" class="premium-slider" title="Geser kiri untuk menurunkan, kanan untuk menaikkan">
                     <div class="threshold-display">
                         <span id="threshold-display-val">70</span>%
                     </div>
