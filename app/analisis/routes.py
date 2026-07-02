@@ -475,7 +475,7 @@ def ekspor_excel(id_sesi):
     # ════════════════════════════════════════
     ws2 = wb.create_sheet(title="Detail Klaster")
 
-    ws2.merge_cells('A1:D1')
+    ws2.merge_cells('A1:B1')
     ws2['A1'] = 'LAPORAN DETAIL KLASTER'
     ws2['A1'].font = Font(bold=True, size=16, color="082C5C")
     ws2['A1'].alignment = center
@@ -485,7 +485,7 @@ def ekspor_excel(id_sesi):
 
     for idx, k in enumerate(klaster_list, 1):
         # Header klaster
-        ws2.merge_cells(f'A{current_row}:D{current_row}')
+        ws2.merge_cells(f'A{current_row}:B{current_row}')
         ws2[f'A{current_row}'] = f'DETAIL ANGGOTA - KLASTER {idx}'
         ws2[f'A{current_row}'].fill = navy_fill
         ws2[f'A{current_row}'].font = header_font
@@ -493,8 +493,8 @@ def ekspor_excel(id_sesi):
         current_row += 1
 
         # Header kolom
-        headers_det = ['No', 'Nama File', 'Skor Kemiripan', 'Pasangan Terdekat']
-        col_widths_det = [6, 45, 18, 45]
+        headers_det = ['No', 'Nama File']
+        col_widths_det = [6, 75]
         for col, (header, width) in enumerate(zip(headers_det, col_widths_det), 1):
             cell = ws2.cell(row=current_row, column=col, value=header)
             cell.fill = PatternFill(start_color="C8E6C9", end_color="C8E6C9", fill_type="solid")
@@ -504,37 +504,17 @@ def ekspor_excel(id_sesi):
             ws2.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
         current_row += 1
 
-        # Ambil semua dokumen dan detail kemiripan dalam klaster
+        # Ambil semua dokumen dalam klaster
         dokumen_ids = [dk.id_dokumen for dk in k.dokumen_relations]
         dokumen_list = DokumenTugas.query.filter(
             DokumenTugas.id_dokumen.in_(dokumen_ids)
         ).all()
-        detail_list = DetailKemiripan.query.filter_by(id_klaster=k.id_klaster).all()
-
-        # Buat lookup skor per dokumen
-        skor_per_dok = {}
-        pasangan_per_dok = {}
-        for detail in detail_list:
-            dok1 = DokumenTugas.query.get(detail.id_dokumen1)
-            dok2 = DokumenTugas.query.get(detail.id_dokumen2)
-            if dok1 and dok2:
-                # Update skor tertinggi untuk dok1
-                if detail.id_dokumen1 not in skor_per_dok or detail.persentase_kemiripan > skor_per_dok[detail.id_dokumen1]:
-                    skor_per_dok[detail.id_dokumen1] = detail.persentase_kemiripan
-                    pasangan_per_dok[detail.id_dokumen1] = dok2.nama_file
-                # Update skor tertinggi untuk dok2
-                if detail.id_dokumen2 not in skor_per_dok or detail.persentase_kemiripan > skor_per_dok[detail.id_dokumen2]:
-                    skor_per_dok[detail.id_dokumen2] = detail.persentase_kemiripan
-                    pasangan_per_dok[detail.id_dokumen2] = dok1.nama_file
 
         for no, dok in enumerate(dokumen_list, 1):
-            skor = skor_per_dok.get(dok.id_dokumen, 0)
-            pasangan = pasangan_per_dok.get(dok.id_dokumen, '-')
-
-            data = [no, dok.nama_file, f'{skor}%', pasangan]
+            data = [no, dok.nama_file]
             for col, val in enumerate(data, 1):
                 cell = ws2.cell(row=current_row, column=col, value=val)
-                cell.alignment = center if col != 2 and col != 4 else left
+                cell.alignment = center if col == 1 else left
                 cell.border = border
                 if no % 2 == 0:
                     cell.fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
@@ -544,7 +524,7 @@ def ekspor_excel(id_sesi):
 
     # Bagian Outlier
     ws2.merge_cells(f'A{current_row}:B{current_row}')
-    ws2[f'A{current_row}'] = 'DOKUMEN OUTLIER (KEMIRIPAN DI BAWAH THRESHOLD)'
+    ws2[f'A{current_row}'] = 'DOKUMEN TIDAK TERDETEKSI MIRIP'
     ws2[f'A{current_row}'].fill = navy_fill
     ws2[f'A{current_row}'].font = header_font
     ws2[f'A{current_row}'].alignment = left
@@ -816,7 +796,7 @@ def ekspor_pdf(id_sesi):
         ]))
 
         # Data detail klaster
-        headers_det = ['No', 'Nama File', 'Skor Kemiripan', 'Pasangan Terdekat']
+        headers_det = ['No', 'Nama File']
         det_table_data = [[
             Paragraph(h, ParagraphStyle('DetHeader', parent=table_header_style, textColor=colors.HexColor('#082C5C')))
             for h in headers_det
@@ -826,32 +806,14 @@ def ekspor_pdf(id_sesi):
         dokumen_list = DokumenTugas.query.filter(
             DokumenTugas.id_dokumen.in_(dokumen_ids)
         ).all()
-        detail_list = DetailKemiripan.query.filter_by(id_klaster=k.id_klaster).all()
-
-        skor_per_dok = {}
-        pasangan_per_dok = {}
-        for detail in detail_list:
-            dok1 = DokumenTugas.query.get(detail.id_dokumen1)
-            dok2 = DokumenTugas.query.get(detail.id_dokumen2)
-            if dok1 and dok2:
-                if detail.id_dokumen1 not in skor_per_dok or detail.persentase_kemiripan > skor_per_dok[detail.id_dokumen1]:
-                    skor_per_dok[detail.id_dokumen1] = detail.persentase_kemiripan
-                    pasangan_per_dok[detail.id_dokumen1] = dok2.nama_file
-                if detail.id_dokumen2 not in skor_per_dok or detail.persentase_kemiripan > skor_per_dok[detail.id_dokumen2]:
-                    skor_per_dok[detail.id_dokumen2] = detail.persentase_kemiripan
-                    pasangan_per_dok[detail.id_dokumen2] = dok1.nama_file
 
         for no, dok in enumerate(dokumen_list, 1):
-            skor = skor_per_dok.get(dok.id_dokumen, 0)
-            pasangan = pasangan_per_dok.get(dok.id_dokumen, '-')
             det_table_data.append([
                 Paragraph(str(no), table_text_center),
-                Paragraph(dok.nama_file, table_text_style),
-                Paragraph(f'{skor}%', table_text_center),
-                Paragraph(pasangan, table_text_style)
+                Paragraph(dok.nama_file, table_text_style)
             ])
 
-        detail_table = Table(det_table_data, colWidths=[30, 200, 93, 200])
+        detail_table = Table(det_table_data, colWidths=[40, 483])
         det_style = [
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#C8E6C9')),
             ('VALIGN', (0,0), (-1,-1), 'TOP'),
@@ -871,7 +833,7 @@ def ekspor_pdf(id_sesi):
         ]))
 
     # Bagian Outlier (Navy Blue Bar)
-    outlier_header_data = [[Paragraph('DOKUMEN OUTLIER (KEMIRIPAN DI BAWAH THRESHOLD)', ParagraphStyle(
+    outlier_header_data = [[Paragraph('DOKUMEN TIDAK TERDETEKSI MIRIP', ParagraphStyle(
         'OutlierHeaderText',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',

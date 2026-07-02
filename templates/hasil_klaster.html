@@ -79,7 +79,7 @@
                     <i class="fa-regular fa-file"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-title">Dokumen Unik</div>
+                    <div class="stat-title">Dokumen Tidak Terdeteksi Mirip</div>
                     <div class="stat-desc">Aman Dari Duplikasi</div>
                     <div class="stat-value">{{ total_outlier }}</div>
                 </div>
@@ -150,11 +150,11 @@
         </section>
 
         <section class="outliers-section">
-            <div class="section-title">Dokumen Unik (Outlier)</div>
+            <div class="section-title">Dokumen Tidak Terdeteksi Mirip</div>
 
             <div class="outliers-banner">
                 <div class="outliers-left">
-                    <div class="outliers-title">{{ total_outlier }} Dokumen Unik Terdeteksi</div>
+                    <div class="outliers-title">{{ total_outlier }} Dokumen Tidak Terdeteksi Mirip</div>
                     <div class="outliers-desc">Dokumen ini tidak memiliki kemiripan &gt;= {{ (threshold * 100)|int if
                         threshold is defined else 70 }}% dengan dokumen lainnya.</div>
 
@@ -176,7 +176,7 @@
                         {% endfor %}
                         {% if outliers|length > 2 %}
                         <div class="outlier-badge more-badge" id="btn-more-outliers"
-                            title="Lihat {{ outliers|length - 2 }} dokumen unik lainnya">
+                            title="Lihat {{ outliers|length - 2 }} dokumen tidak terdeteksi mirip lainnya">
                             + {{ outliers|length - 2 }} lainnya
                         </div>
                         {% endif %}
