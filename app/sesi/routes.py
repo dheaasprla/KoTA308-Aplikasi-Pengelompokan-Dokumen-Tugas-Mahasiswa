@@ -12,7 +12,7 @@
 import os
 import uuid
 from flask import (
-    render_template, request, redirect, url_for,
+    jsonify, render_template, request, redirect, url_for,
     flash, session, current_app
 )
 
@@ -293,6 +293,54 @@ def confirm_batch_upload(id_sesi):
 
     return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
 
+
+# Mengambil state terakhir di sesi analisis jika aplikasi berhenti di tengah jalan (misal server restart) agar user tidak kehilangan data.
+
+@sesi_bp.route('/<int:id_sesi>/state', methods=['GET'])
+@login_required
+def get_session_state(id_sesi):
+    """
+    Mengambil state terakhir di sesi analisis jika aplikasi berhenti di tengah jalan.
+    """
+    sesi = SesiAnalisis.query.get_or_404(id_sesi)
+    
+    dokumen_list = DokumenTugas.query.filter_by(id_sesi=id_sesi).order_by(DokumenTugas.uploaded_at.asc()).all()
+    
+    dokumen_data = [{
+            "id_dokumen": dokumen.id_dokumen,
+            "nama_file": dokumen.nama_file,
+            "nama_tampil": dokumen.nama_file.rsplit('.', 1)[0],
+            "ukuran_file_mb": dokumen.ukuran_file_mb,
+            "uploaded_at": dokumen.uploaded_at.isoformat(),
+        }
+        for dokumen in dokumen_list
+    ]
+    
+    # Cek apakah sudah ada klaster (sudah dianalisis) untuk sesi ini
+    from models import Klaster
+    klaster_list = Klaster.query.filter_by(id_sesi=id_sesi).all()
+    klaster_tersedia = [k.id_klaster for k in klaster_list]
+    sudah_dianalisis = len(klaster_tersedia) > 0
+    
+    # Hitung sisa kuota file
+    max_files = current_app.config['MAX_FILES_PER_SESSION']
+    sisa_kuota = max_files - sesi.total_file_terunggah
+    
+    return jsonify({
+        "status": "selesai",
+        "id_sesi": sesi.id_sesi,
+        "nama_matkul": sesi.nama_matkul,
+        "kelas": sesi.kelas,
+        "threshold_awal": sesi.threshold_awal,
+        "status_sesi": sesi.status,
+        "total_file_terunggah": sesi.total_file_terunggah,
+        "ukuran_terpakai_mb": sesi.ukuran_terpakai_mb,
+        "sisa_kuota_file": sisa_kuota,
+        "tanggal_buat": sesi.tanggal_buat.isoformat(),
+        "sudah_dianalisis": sudah_dianalisis,
+        "dokumen": dokumen_data,
+        "klaster_tersedia": klaster_tersedia
+    }), 200
 
 # ============================================================
 # Capture nilai threshold (bagian dari CO-03)
