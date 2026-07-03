@@ -45,6 +45,7 @@ body {
     flex-direction: column;
     min-height: 100vh;
     gap: 24px;
+    min-width: 0;
 }
 
 .header-container {
