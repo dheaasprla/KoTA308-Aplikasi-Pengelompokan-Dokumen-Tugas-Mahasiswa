@@ -1,19 +1,10 @@
-# ============================================================
-# FILE: app/sesi/routes.py
-# Routes untuk UC-01 (Membuat Sesi Analisis Baru) dan
-# UC-02 (Mengunggah Dokumen Tugas)
-#
-# Cross reference SRS:
-#   - CO-01: membuatSesiBaru
-#   - CO-02: mengunggahBerkasTugas
-#   - CO-03 (sebagian): capture nilai threshold saja
-# ============================================================
-
-import os
+﻿import os
 import uuid
+import time
+from datetime import datetime
 from flask import (
-    jsonify, render_template, request, redirect, url_for,
-    flash, session, current_app
+    render_template, request, redirect, url_for,
+    flash, session, current_app, jsonify
 )
 
 from app.sesi import sesi_bp
@@ -23,48 +14,19 @@ from utils.pdf_validator import (
     is_allowed_extension,
     is_text_based_pdf,
     extract_text_from_pdf,
-    MIN_TEXT_LENGTH,  # <-- BARU: diimport untuk dipakai di pesan error
-                      # agar angka threshold konsisten antara validator
-                      # dan pesan yang ditampilkan ke user
 )
 from utils.text_preprocessor import clean_text
 
 
-# ============================================================
-# UC-01: Membuat Sesi Analisis Baru (CO-01: membuatSesiBaru)
-# ============================================================
-
 @sesi_bp.route('/baru', methods=['GET'])
 @login_required
 def form_sesi_baru():
-    """
-    Menampilkan form pembuatan sesi analisis baru.
-    Cross ref: SSD UC-01, langkah 1-2
-    (requestNewAnalysisSession -> present session input form).
-    """
-    return render_template('sesi_baru.html')
+    return render_template('unggah_dokumen.html')
 
 
 @sesi_bp.route('/baru', methods=['POST'])
 @login_required
 def submit_session_data():
-    """
-    Menangani submit form sesi baru.
-    Cross ref: SSD UC-01, langkah 3-4 (submitSessionData).
-
-    Validasi:
-        - Nama Mata Kuliah tidak boleh kosong (Extension 3a SRS)
-        - Kelas tidak boleh kosong (Extension 3a SRS)
-
-    Jika valid:
-        - Buat record SesiAnalisis baru dengan threshold_awal
-          default sesuai config.DEFAULT_THRESHOLD (skala 0-100)
-        - Redirect ke halaman upload dokumen (UC-02)
-
-    Jika tidak valid:
-        - Tampilkan flash message error
-        - Kembali ke form sesi baru (Extension 3a)
-    """
     nama_matkul = request.form.get('mata_kuliah', '').strip()
     kelas = request.form.get('kelas', '').strip()
 
@@ -93,7 +55,6 @@ def submit_session_data():
         total_file_terunggah=0,
         ukuran_terpakai_mb=0.0,
     )
-
     db.session.add(sesi_baru)
     db.session.commit()
 
@@ -101,42 +62,17 @@ def submit_session_data():
     return redirect(url_for('sesi.form_upload', id_sesi=sesi_baru.id_sesi))
 
 
-# ============================================================
-# UC-02: Mengunggah Dokumen Tugas (CO-02: mengunggahBerkasTugas)
-# ============================================================
-
 @sesi_bp.route('/<int:id_sesi>/unggah', methods=['GET'])
 @login_required
 def form_upload(id_sesi):
-    """
-    Menampilkan halaman upload dokumen untuk sesi tertentu.
-    """
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
-    return render_template('upload_dokumen.html', sesi=sesi)
+    return render_template('unggah_dokumen.html', sesi=sesi)
 
 
 @sesi_bp.route('/<int:id_sesi>/unggah', methods=['POST'])
 @login_required
 def confirm_batch_upload(id_sesi):
-    """
-    Menangani upload massal dokumen PDF.
-    Cross ref: SSD UC-02, CO-02 confirmBatchUpload().
-
-    Alur validasi per file (urut dari yang termurah komputasinya):
-        1. Validasi jumlah file total (<= MAX_FILES_PER_SESSION)
-        2. Untuk setiap file:
-           a. Validasi ekstensi (.pdf)
-           b. Validasi ukuran (<= MAX_FILE_SIZE_MB)
-           c. Validasi kuota total sesi (<= MAX_TOTAL_SIZE_MB)
-           d. Validasi kandungan teks dokumen (>= MIN_TEXT_LENGTH)
-        3. Ekstrak teks mentah (PyMuPDF)
-        4. Preprocessing: clean_text() — case folding
-        5. Simpan file fisik ke UPLOAD_FOLDER
-        6. Insert metadata + teks_ekstraksi ke dokumen_tugas
-        7. Update total_file_terunggah & ukuran_terpakai_mb di sesi
-    """
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
-
     uploaded_files = request.files.getlist('files[]')
     uploaded_files = [f for f in uploaded_files if f and f.filename]
 
@@ -144,33 +80,21 @@ def confirm_batch_upload(id_sesi):
         flash('Tidak ada berkas yang dipilih.', 'error')
         return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
 
-    # ── Validasi 1: Jumlah file tidak boleh melebihi kuota sesi ──
     max_files = current_app.config['MAX_FILES_PER_SESSION']
     total_setelah_upload = sesi.total_file_terunggah + len(uploaded_files)
 
     if total_setelah_upload > max_files:
         sisa_kuota = max_files - sesi.total_file_terunggah
         flash(
-            f'Jumlah berkas melebihi batas maksimal {max_files} dokumen '
-            f'per sesi. Sisa kuota Anda saat ini: {sisa_kuota} berkas. '
-            f'Tidak ada berkas yang diunggah.',
+            f'Jumlah berkas melebihi batas maksimal {max_files} dokumen. '
+            f'Sisa kuota: {sisa_kuota} berkas.',
             'error'
         )
-        
-        file_gagal = uploaded_files[sisa_kuota:]
-        for file in file_gagal:
-            flash(
-                f'Tidak diunggah: {file.filename} '
-                f'(kuota sesi penuh, maksimal {max_files} dokumen)',
-                'error'
-            )
-        
         return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
 
     max_size_mb = current_app.config['MAX_FILE_SIZE_MB']
     max_total_mb = current_app.config['MAX_TOTAL_SIZE_MB']
     upload_folder = current_app.config['UPLOAD_FOLDER']
-
     sesi_folder = os.path.join(upload_folder, f'sesi_{id_sesi}')
     os.makedirs(sesi_folder, exist_ok=True)
 
@@ -180,88 +104,35 @@ def confirm_batch_upload(id_sesi):
 
     for file in uploaded_files:
         filename = file.filename
-
-        # ── Validasi 2a: Ekstensi harus .pdf ──
         if not is_allowed_extension(filename):
             ditolak.append(f'{filename} (format bukan .pdf)')
             continue
-
-        # ── Validasi 2b: Ukuran file <= MAX_FILE_SIZE_MB ──
         file.stream.seek(0, os.SEEK_END)
         size_bytes = file.stream.tell()
         file.stream.seek(0)
         size_mb = size_bytes / (1024 * 1024)
-
         if size_mb > max_size_mb:
-            ditolak.append(
-                f'{filename} (ukuran {size_mb:.2f}MB > {max_size_mb}MB)'
-            )
+            ditolak.append(f'{filename} (ukuran {size_mb:.2f}MB > {max_size_mb}MB)')
             continue
-
-        # ── Validasi 2c: Kuota total penyimpanan sesi ──
         if sesi.ukuran_terpakai_mb + total_size_baru + size_mb > max_total_mb:
-            ditolak.append(
-                f'{filename} (kuota penyimpanan sesi {max_total_mb}MB penuh)'
-            )
+            ditolak.append(f'{filename} (kuota sesi penuh)')
             continue
-
-        # ── Validasi 2d: Kandungan teks dokumen >= MIN_TEXT_LENGTH ──
-        #
-        # PERUBAHAN dari versi sebelumnya:
-        #   - is_text_based_pdf() sekarang mengembalikan tuple (bool, int)
-        #     bukan hanya bool, sehingga kita bisa menampilkan jumlah
-        #     karakter aktual yang terekstrak di pesan error.
-        #   - Pesan error dibuat netral (tidak menyebut "scan") karena
-        #     sistem tidak bisa memastikan penyebab kurangnya teks.
-        #     Bisa karena scan tanpa OCR, PDF rusak, atau memang sedikit.
-        #   - MIN_TEXT_LENGTH diimport dari pdf_validator agar angka
-        #     yang ditampilkan di pesan selalu konsisten dengan threshold
-        #     yang sebenarnya dipakai oleh validator.
-        #
         file.stream.seek(0)
-        is_valid, char_count = is_text_based_pdf(file.stream)
-        # is_valid  → True jika char_count >= MIN_TEXT_LENGTH
-        # char_count → jumlah karakter yang berhasil diekstrak,
-        #              digunakan di pesan error agar user tahu angka pastinya
-
-        if not is_valid:
-            ditolak.append(
-                f'{filename} (teks yang berhasil diekstrak hanya '
-                f'{char_count} karakter, di bawah batas minimum '
-                f'{MIN_TEXT_LENGTH} karakter yang diperlukan. '
-                f'Pastikan dokumen berisi konten teks yang dapat dibaca.)'
-            )
-            # Lanjut ke file berikutnya, file ini ditolak.
-            # File lain dalam batch tetap diproses (Extension 4b SRS).
+        if not is_text_based_pdf(file.stream):
+            ditolak.append(f'{filename} (terdeteksi scan/tidak ada teks)')
             continue
-
         file.stream.seek(0)
-
-        # ── Ekstraksi teks mentah ──
-        # Stream sudah di-seek(0) di atas setelah is_text_based_pdf.
-        # extract_text_from_pdf() akan membaca stream dari awal.
         try:
             raw_text = extract_text_from_pdf(file.stream)
         except Exception:
-            ditolak.append(f'{filename} (gagal membaca isi PDF / file rusak)')
+            ditolak.append(f'{filename} (gagal membaca PDF)')
             continue
-
-        # ── Preprocessing: case folding ──
         cleaned_text = clean_text(raw_text)
-
-        # ── Simpan file fisik ke server ──
-        # Nama file di disk dibuat unik (UUID) untuk menghindari
-        # konflik nama antar mahasiswa/sesi, sementara nama_file
-        # asli (identitas mahasiswa) disimpan di kolom nama_file DB.
-        # Saat ditampilkan ke user di UI, ekstensi dihilangkan:
-        #   nama_tampil = dokumen.nama_file.rsplit('.', 1)[0]
         file.stream.seek(0)
         ext = os.path.splitext(filename)[1]
         disk_filename = f'{uuid.uuid4().hex}{ext}'
         disk_path = os.path.join(sesi_folder, disk_filename)
         file.save(disk_path)
-
-        # ── Insert metadata ke dokumen_tugas ──
         dokumen = DokumenTugas(
             id_sesi=id_sesi,
             nama_file=filename,
@@ -271,20 +142,14 @@ def confirm_batch_upload(id_sesi):
             is_outlier=False,
         )
         db.session.add(dokumen)
-
         berhasil.append(filename)
         total_size_baru += size_mb
 
-    # ── Update statistik sesi ──
     if berhasil:
         sesi.total_file_terunggah += len(berhasil)
-        sesi.ukuran_terpakai_mb = round(
-            sesi.ukuran_terpakai_mb + total_size_baru, 2
-        )
-
+        sesi.ukuran_terpakai_mb = round(sesi.ukuran_terpakai_mb + total_size_baru, 2)
     db.session.commit()
 
-    # ── Feedback ke pengguna ──
     if berhasil:
         flash(f'{len(berhasil)} berkas berhasil diunggah.', 'success')
     if ditolak:
@@ -294,38 +159,264 @@ def confirm_batch_upload(id_sesi):
     return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
 
 
-# Mengambil state terakhir di sesi analisis jika aplikasi berhenti di tengah jalan (misal server restart) agar user tidak kehilangan data.
+@sesi_bp.route('/<int:id_sesi>/hasil-klaster', methods=['POST'])
+@login_required
+def update_threshold(id_sesi):
+    from services.embedding_service import embed_semua_dokumen
+    from services.similarity_service import hitung_similarity_matrix
+    from services.clustering_service import jalankan_clustering
+    from models import Klaster, DokumenKlaster, DetailKemiripan
+    from itertools import combinations
+
+    sesi = SesiAnalisis.query.get_or_404(id_sesi)
+    try:
+        threshold_value = float(request.form.get('threshold', ''))
+    except (ValueError, TypeError):
+        flash('Nilai threshold tidak valid.', 'error')
+        return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
+
+    if not (0 <= threshold_value <= 100):
+        flash('Nilai threshold harus 0-100.', 'error')
+        threshold_value = current_app.config['DEFAULT_THRESHOLD']
+
+    sesi.threshold_awal = threshold_value
+
+    from models import Klaster, DetailKemiripan
+    klaster_list = Klaster.query.filter_by(id_sesi=id_sesi).all()
+    for klaster in klaster_list:
+        detail_list = DetailKemiripan.query.filter_by(
+            id_klaster=klaster.id_klaster
+        ).all()
+        for detail in detail_list:
+            detail.kalimat_highlight1 = None
+            detail.kalimat_highlight2 = None
+
+    db.session.commit()
+
+    dokumen_list = DokumenTugas.query.filter_by(id_sesi=id_sesi).all()
+    if len(dokumen_list) < 2:
+        flash('Minimal 2 dokumen diperlukan untuk analisis.', 'error')
+        return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
+
+    klaster_lama = Klaster.query.filter_by(id_sesi=id_sesi).all()
+    if klaster_lama:
+        Klaster.query.filter_by(id_sesi=id_sesi).delete()
+        for dok in dokumen_list:
+            dok.is_outlier = False
+        db.session.flush()
+
+    waktu_mulai = time.time()
+
+    embeddings = embed_semua_dokumen(dokumen_list)
+    similarity_matrix = hitung_similarity_matrix(embeddings)
+    hasil = jalankan_clustering(similarity_matrix, threshold_value)
+
+    waktu_selesai = time.time()
+    waktu_proses_detik = round(waktu_selesai - waktu_mulai, 1)
+
+    for anggota_ids in hasil['kelompok']:
+        skor_dalam_klaster = []
+        for id_a, id_b in combinations(sorted(anggota_ids), 2):
+            key = tuple(sorted([id_a, id_b]))
+            skor = similarity_matrix.get(key, 0.0)
+            skor_dalam_klaster.append(round(skor * 100, 2))
+
+        skor_tertinggi = max(skor_dalam_klaster) if skor_dalam_klaster else 0.0
+        skor_terendah = min(skor_dalam_klaster) if skor_dalam_klaster else 0.0
+
+        klaster_baru = Klaster(
+            id_sesi=id_sesi,
+            skor_tertinggi=skor_tertinggi,
+            skor_terendah=skor_terendah
+        )
+        db.session.add(klaster_baru)
+        db.session.flush()
+
+        for id_dok in anggota_ids:
+            db.session.add(DokumenKlaster(
+                id_klaster=klaster_baru.id_klaster,
+                id_dokumen=id_dok
+            ))
+
+        for id_a, id_b in combinations(sorted(anggota_ids), 2):
+            key = tuple(sorted([id_a, id_b]))
+            skor = similarity_matrix.get(key, 0.0)
+            db.session.add(DetailKemiripan(
+                id_klaster=klaster_baru.id_klaster,
+                id_dokumen1=id_a,
+                id_dokumen2=id_b,
+                persentase_kemiripan=round(skor * 100, 2),
+                kalimat_highlight1=None,
+                kalimat_highlight2=None,
+            ))
+
+    for id_dok in hasil['outlier']:
+        dok = DokumenTugas.query.get(id_dok)
+        if dok:
+            dok.is_outlier = True
+
+    sesi.status = 'analyzed'
+    sesi.tanggal_selesai = datetime.now()
+    db.session.commit()
+
+    session[f'waktu_proses_{id_sesi}'] = waktu_proses_detik
+    session['last_id_sesi'] = id_sesi
+
+    flash(f'Analisis selesai! Threshold {threshold_value:.0f}%.', 'success')
+    return redirect(url_for('analisis.halaman_hasil_klaster', id_sesi=id_sesi))
+
+
+@sesi_bp.route('/baru/api', methods=['POST'])
+@login_required
+def api_buat_sesi():
+    nama_matkul = request.form.get('mata_kuliah', '').strip()
+    kelas = request.form.get('kelas', '').strip()
+
+    errors = []
+    if not nama_matkul:
+        errors.append('Nama Mata Kuliah tidak boleh kosong.')
+    if not kelas:
+        errors.append('Kelas tidak boleh kosong.')
+    if errors:
+        return jsonify({'status': 'error', 'messages': errors}), 400
+
+    id_dosen = session.get('user_id')
+    if id_dosen is None:
+        return jsonify({'status': 'error', 'messages': ['Sesi login tidak ditemukan.']}), 401
+
+    sesi_baru = SesiAnalisis(
+        id_dosen=id_dosen,
+        nama_matkul=nama_matkul,
+        kelas=kelas,
+        threshold_awal=current_app.config['DEFAULT_THRESHOLD'],
+        status='uploaded',
+        total_file_terunggah=0,
+        ukuran_terpakai_mb=0.0,
+    )
+    db.session.add(sesi_baru)
+    db.session.commit()
+
+    return jsonify({
+        'status': 'success',
+        'id_sesi': sesi_baru.id_sesi,
+        'message': 'Sesi analisis baru berhasil dibuat.'
+    })
+
+
+@sesi_bp.route('/<int:id_sesi>/unggah/api', methods=['POST'])
+@login_required
+def api_upload_files(id_sesi):
+    sesi = SesiAnalisis.query.get_or_404(id_sesi)
+    uploaded_files = request.files.getlist('files[]')
+    uploaded_files = [f for f in uploaded_files if f and f.filename]
+
+    if not uploaded_files:
+        return jsonify({'status': 'error', 'message': 'Tidak ada berkas yang dipilih.'}), 400
+
+    max_files = current_app.config['MAX_FILES_PER_SESSION']
+    total_setelah_upload = sesi.total_file_terunggah + len(uploaded_files)
+    if total_setelah_upload > max_files:
+        sisa_kuota = max_files - sesi.total_file_terunggah
+        return jsonify({
+            'status': 'error',
+            'message': f'Jumlah berkas melebihi batas {max_files}. Sisa kuota: {sisa_kuota} berkas.'
+        }), 400
+
+    max_size_mb = current_app.config['MAX_FILE_SIZE_MB']
+    max_total_mb = current_app.config['MAX_TOTAL_SIZE_MB']
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    sesi_folder = os.path.join(upload_folder, f'sesi_{id_sesi}')
+    os.makedirs(sesi_folder, exist_ok=True)
+
+    berhasil = []
+    ditolak = []
+    total_size_baru = 0.0
+
+    for file in uploaded_files:
+        filename = file.filename
+        if not is_allowed_extension(filename):
+            ditolak.append(f'{filename} (format bukan .pdf)')
+            continue
+        file.stream.seek(0, os.SEEK_END)
+        size_bytes = file.stream.tell()
+        file.stream.seek(0)
+        size_mb = size_bytes / (1024 * 1024)
+        if size_mb > max_size_mb:
+            ditolak.append(f'{filename} (ukuran {size_mb:.2f}MB > {max_size_mb}MB)')
+            continue
+        if sesi.ukuran_terpakai_mb + total_size_baru + size_mb > max_total_mb:
+            ditolak.append(f'{filename} (kuota sesi penuh)')
+            continue
+        file.stream.seek(0)
+        if not is_text_based_pdf(file.stream):
+            ditolak.append(f'{filename} (terdeteksi scan/tidak ada teks)')
+            continue
+        file.stream.seek(0)
+        try:
+            raw_text = extract_text_from_pdf(file.stream)
+        except Exception:
+            ditolak.append(f'{filename} (gagal membaca PDF)')
+            continue
+        cleaned_text = clean_text(raw_text)
+        file.stream.seek(0)
+        ext = os.path.splitext(filename)[1]
+        disk_filename = f'{uuid.uuid4().hex}{ext}'
+        disk_path = os.path.join(sesi_folder, disk_filename)
+        file.save(disk_path)
+        dokumen = DokumenTugas(
+            id_sesi=id_sesi,
+            nama_file=filename,
+            ukuran_file_mb=round(size_mb, 2),
+            path_penyimpanan=disk_path,
+            teks_ekstraksi=cleaned_text,
+            is_outlier=False,
+        )
+        db.session.add(dokumen)
+        berhasil.append(filename)
+        total_size_baru += size_mb
+
+    if berhasil:
+        sesi.total_file_terunggah += len(berhasil)
+        sesi.ukuran_terpakai_mb = round(sesi.ukuran_terpakai_mb + total_size_baru, 2)
+    db.session.commit()
+
+    return jsonify({
+        'status': 'success',
+        'berhasil': berhasil,
+        'ditolak': ditolak,
+        'total_file_terunggah': sesi.total_file_terunggah,
+        'ukuran_terpakai_mb': sesi.ukuran_terpakai_mb,
+        'message': f'{len(berhasil)} berkas berhasil diunggah.'
+    })
+
 
 @sesi_bp.route('/<int:id_sesi>/state', methods=['GET'])
 @login_required
 def get_session_state(id_sesi):
     """
-    Mengambil state terakhir di sesi analisis jika aplikasi berhenti di tengah jalan.
+    Mengambil state terakhir sesi analisis jika aplikasi berhenti di tengah jalan.
     """
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
-    
-    dokumen_list = DokumenTugas.query.filter_by(id_sesi=id_sesi).order_by(DokumenTugas.uploaded_at.asc()).all()
-    
+
+    dokumen_list = DokumenTugas.query.filter_by(
+        id_sesi=id_sesi
+    ).order_by(DokumenTugas.id_dokumen.asc()).all()
+
     dokumen_data = [{
-            "id_dokumen": dokumen.id_dokumen,
-            "nama_file": dokumen.nama_file,
-            "nama_tampil": dokumen.nama_file.rsplit('.', 1)[0],
-            "ukuran_file_mb": dokumen.ukuran_file_mb,
-            "uploaded_at": dokumen.uploaded_at.isoformat(),
-        }
-        for dokumen in dokumen_list
-    ]
-    
-    # Cek apakah sudah ada klaster (sudah dianalisis) untuk sesi ini
+        "id_dokumen": dok.id_dokumen,
+        "nama_file": dok.nama_file,
+        "nama_tampil": dok.nama_file.rsplit('.', 1)[0],
+        "ukuran_file_mb": dok.ukuran_file_mb,
+    } for dok in dokumen_list]
+
     from models import Klaster
     klaster_list = Klaster.query.filter_by(id_sesi=id_sesi).all()
     klaster_tersedia = [k.id_klaster for k in klaster_list]
     sudah_dianalisis = len(klaster_tersedia) > 0
-    
-    # Hitung sisa kuota file
+
     max_files = current_app.config['MAX_FILES_PER_SESSION']
     sisa_kuota = max_files - sesi.total_file_terunggah
-    
+
     return jsonify({
         "status": "selesai",
         "id_sesi": sesi.id_sesi,
@@ -341,56 +432,3 @@ def get_session_state(id_sesi):
         "dokumen": dokumen_data,
         "klaster_tersedia": klaster_tersedia
     }), 200
-
-# ============================================================
-# Capture nilai threshold (bagian dari CO-03)
-# ============================================================
-
-@sesi_bp.route('/<int:id_sesi>/hasil-klaster', methods=['POST'])
-@login_required
-def update_threshold(id_sesi):
-    """
-    Menyimpan nilai threshold yang dipilih dosen melalui slider.
-    Nilai disimpan dalam skala 0-100, konsisten dengan models.py.
-    """
-    sesi = SesiAnalisis.query.get_or_404(id_sesi)
-
-    try:
-        threshold_value = float(request.form.get('threshold', ''))
-    except (ValueError, TypeError):
-        flash('Nilai threshold tidak valid.', 'error')
-        return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
-
-    if not (0 <= threshold_value <= 100):
-        flash(
-            'Nilai threshold harus berada di antara 0% - 100%. '
-            'Nilai dikembalikan ke default.',
-            'error'
-        )
-        threshold_value = current_app.config['DEFAULT_THRESHOLD']
-
-    sesi.threshold_awal = threshold_value
-    
-    # ── Reset kalimat_highlight saat threshold diubah ──
-    # Highlight lama tidak relevan lagi karena threshold baru
-    # akan menghasilkan pasangan kalimat yang berbeda.
-    # DetailKemiripan yang baru akan dibuat saat jalankan_analisis_klaster
-    # dipanggil (cascade delete klaster lama → detail lama terhapus).
-    # Tapi untuk sesi yang belum di-re-cluster, reset highlight dulu
-    # agar tidak tampil highlight dengan threshold lama.
-    from models import Klaster, DetailKemiripan
-    klaster_list = Klaster.query.filter_by(id_sesi=id_sesi).all()
-    for klaster in klaster_list:
-        detail_list = DetailKemiripan.query.filter_by(
-            id_klaster=klaster.id_klaster
-        ).all()
-        for detail in detail_list:
-            detail.kalimat_highlight1 = None
-            detail.kalimat_highlight2 = None
-    
-    db.session.commit()
-
-    flash(f'Threshold berhasil diatur ke {threshold_value:.0f}%.', 'success')
-
-    # TODO (sprint analisis): redirect ke halaman hasil klaster
-    return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))

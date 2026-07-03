@@ -1,8 +1,3 @@
-// ══════════════════════════════════════
-// riwayat_sesi.js
-// Fetch data riwayat dari backend dan render ke tabel
-// ══════════════════════════════════════
-
 document.addEventListener('DOMContentLoaded', function () {
     loadRiwayat();
 });
@@ -56,11 +51,8 @@ function renderTabel(riwayat) {
     }
 
     tbody.innerHTML = riwayat.map(sesi => {
-        const statusBadge = getStatusBadge(sesi.status_duplikasi, sesi.status_sesi);
         const tanggal = formatTanggal(sesi.tanggal_buat);
-        const linkHasil = sesi.status_sesi === 'analyzed' || sesi.status_sesi === 'completed'
-            ? `/analisis/sesi/${sesi.id_sesi}/hasil`
-            : `/sesi/${sesi.id_sesi}/unggah`;
+        const statusBadge = getStatusBadge(sesi.status_sesi);
 
         return `
             <tr data-id="${sesi.id_sesi}">
@@ -72,11 +64,13 @@ function renderTabel(riwayat) {
                 </td>
                 <td>${tanggal}</td>
                 <td>${sesi.jumlah_dokumen} File</td>
+                <td>${statusBadge}</td>
                 <td>
                     <div class="action-cell">
-                        <a href="${linkHasil}" class="btn-action open" title="Buka Sesi">
+                        <button class="btn-action open" title="Buka Sesi"
+                            onclick="bukaSesi(${sesi.id_sesi})">
                             <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        </a>
+                        </button>
                         <button class="btn-action delete" title="Hapus"
                             onclick="openDeleteModal(${sesi.id_sesi}, '${escHtml(sesi.nama_matkul)} ${escHtml(sesi.kelas)}')">
                             <i class="fa-solid fa-trash-can"></i>
@@ -87,19 +81,11 @@ function renderTabel(riwayat) {
     }).join('');
 }
 
-function getStatusBadge(status_duplikasi, status_sesi) {
-    if (status_sesi === 'uploaded') {
-        return '<span class="status-badge belum">Belum Dianalisis</span>';
+function getStatusBadge(status_sesi) {
+    if (status_sesi === 'analyzed' || status_sesi === 'completed') {
+        return '<span class="status-badge selesai">Selesai Dianalisis</span>';
     }
-    if (!status_duplikasi) {
-        return '<span class="status-badge belum">-</span>';
-    }
-    const map = {
-        'Ada Duplikasi': '<span class="status-badge duplikasi">Ada Duplikasi</span>',
-        'Duplikasi Sedang': '<span class="status-badge sedang">Duplikasi Sedang</span>',
-        'Bersih': '<span class="status-badge bersih">Bersih</span>'
-    };
-    return map[status_duplikasi] || '<span class="status-badge">-</span>';
+    return '<span class="status-badge belum">Belum Dianalisis</span>';
 }
 
 function formatTanggal(isoString) {
@@ -163,3 +149,27 @@ document.getElementById('btnConfirmDelete').addEventListener('click', function (
             alert('Error: ' + err.message);
         });
 });
+
+// ══ Buka Sesi dengan cek state dulu ══
+function bukaSesi(idSesi) {
+    fetch(`/sesi/${idSesi}/state`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status !== 'selesai') {
+            alert('Gagal memuat data sesi.');
+            return;
+        }
+
+        if (data.sudah_dianalisis) {
+            window.location.href = `/analisis/sesi/${idSesi}/hasil`;
+        } else {
+            window.location.href = `/sesi/${idSesi}/unggah`;
+        }
+    })
+    .catch(err => {
+        alert('Error: ' + err.message);
+    });
+}

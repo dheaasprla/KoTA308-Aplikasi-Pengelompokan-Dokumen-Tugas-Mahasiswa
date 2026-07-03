@@ -424,3 +424,21 @@ body {
 .btn-modal.danger:hover {
     opacity: 0.9;
 }
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-badge.selesai {
+    background-color: #DCFCE7;
+    color: #16A34A;
+}
+
+.status-badge.belum {
+    background-color: #FEF9C3;
+    color: #CA8A04;
+}

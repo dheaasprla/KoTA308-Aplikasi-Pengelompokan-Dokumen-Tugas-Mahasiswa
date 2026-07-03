@@ -54,7 +54,7 @@ class SesiAnalisis(db.Model):
     tanggal_selesai      = db.Column(db.DateTime,    nullable=True)
 
     __table_args__ = (
-        db.CheckConstraint('total_file_terunggah <= 32',  name='ck_max_file_per_sesi'),
+        db.CheckConstraint('total_file_terunggah <= 35',  name='ck_max_file_per_sesi'),
         db.CheckConstraint(
             "status IN ('uploaded', 'analyzed', 'completed')",
             name='ck_status_sesi'

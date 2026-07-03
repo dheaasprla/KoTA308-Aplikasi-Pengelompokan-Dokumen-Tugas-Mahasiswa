@@ -117,7 +117,6 @@
         border: none;
     }
 
-    /* Slider disabled state */
     .premium-slider:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -238,7 +237,6 @@
                     }, 500);
                 }
 
-                // Reset tombol dan slider ke kondisi awal saat modal dibuka
                 resetModal();
 
                 modalBackdrop.style.display = 'flex';
@@ -261,7 +259,6 @@
         }
 
         function closeModal() {
-            // Jangan bisa tutup modal kalau analisis sedang berjalan
             if (btnSubmit && btnSubmit.disabled) return;
 
             modalBackdrop.classList.remove('show');
@@ -272,11 +269,11 @@
         }
 
         function resetModal() {
-            // Reset slider ke aktif
             if (inputThreshold) {
                 inputThreshold.disabled = false;
+                inputThreshold.style.pointerEvents = 'auto';
+                inputThreshold.style.opacity = '1';
             }
-            // Reset tombol ke kondisi awal
             if (btnSubmit) {
                 btnSubmit.disabled = false;
             }
@@ -286,6 +283,11 @@
             if (labelSubmit) {
                 labelSubmit.textContent = 'Mulai Analisis';
             }
+            if (btnCloseModal) {
+                btnCloseModal.style.display = '';
+            }
+            const errorEl = document.getElementById('modal-error-msg');
+            if (errorEl) errorEl.textContent = '';
         }
 
         if (inputThreshold && thresholdDisplayVal) {
@@ -294,32 +296,76 @@
             });
         }
 
-        // Handle submit form
         if (formThreshold) {
-            formThreshold.addEventListener('submit', function () {
-                // Disable slider supaya tidak bisa diubah
+            formThreshold.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const thresholdValue = inputThreshold ? inputThreshold.value : 70;
+                const formAction = formThreshold.action;
+                const idSesi = formAction.split('/sesi/')[1].split('/')[0];
+
                 if (inputThreshold) {
-                    inputThreshold.disabled = false; // tetap enabled supaya value terkirim
                     inputThreshold.style.pointerEvents = 'none';
                     inputThreshold.style.opacity = '0.5';
                 }
+                if (btnSubmit) btnSubmit.disabled = true;
+                if (iconSubmit) iconSubmit.className = 'fa-solid fa-arrows-rotate fa-spin';
+                if (labelSubmit) labelSubmit.textContent = 'Menganalisis...';
+                if (btnCloseModal) btnCloseModal.style.display = 'none';
 
-                // Ubah tombol jadi loading state
-                if (btnSubmit) {
-                    btnSubmit.disabled = true;
-                }
-                if (iconSubmit) {
-                    iconSubmit.className = 'fa-solid fa-arrows-rotate fa-spin';
-                }
-                if (labelSubmit) {
-                    labelSubmit.textContent = 'Menganalisis...';
-                }
+                const formData = new FormData();
+                formData.append('threshold', thresholdValue);
 
-                // Sembunyikan tombol close modal
-                if (btnCloseModal) {
-                    btnCloseModal.style.display = 'none';
-                }
+                fetch(`/sesi/${idSesi}/hasil-klaster`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Gagal menyimpan threshold.');
+                    return fetch(`/analisis/sesi/${idSesi}/jalankan`, {
+                        method: 'POST'
+                    });
+                })
+                .then(res => res.json().then(data => ({ status: res.status, data })))
+                .then(({ status, data }) => {
+                    if (status === 200 && data.status === 'selesai') {
+                        window.location.href = `/analisis/sesi/${idSesi}/hasil`;
+                    } else if (status === 400) {
+                        tampilkanError(data.pesan || 'Validasi gagal.');
+                    } else if (status === 500) {
+                        tampilkanError(data.pesan || 'Analisis gagal. Silakan coba kembali.');
+                    } else {
+                        tampilkanError('Terjadi kesalahan tidak terduga.');
+                    }
+                })
+                .catch(err => {
+                    tampilkanError('Terjadi kesalahan: ' + err.message);
+                });
             });
+        }
+
+        function tampilkanError(pesan) {
+            if (inputThreshold) {
+                inputThreshold.style.pointerEvents = 'auto';
+                inputThreshold.style.opacity = '1';
+            }
+            if (btnSubmit) btnSubmit.disabled = false;
+            if (iconSubmit) iconSubmit.className = 'fa-solid fa-play';
+            if (labelSubmit) labelSubmit.textContent = 'Mulai Analisis';
+            if (btnCloseModal) btnCloseModal.style.display = '';
+
+            let errorEl = document.getElementById('modal-error-msg');
+            if (!errorEl) {
+                errorEl = document.createElement('p');
+                errorEl.id = 'modal-error-msg';
+                errorEl.style.cssText = 'color:#EF4444; font-size:13px; text-align:center; margin-top:12px;';
+                document.querySelector('.modal-actions-center').after(errorEl);
+            }
+            errorEl.textContent = pesan;
+
+            setTimeout(() => {
+                errorEl.textContent = '';
+            }, 6000);
         }
     });
 </script>

@@ -79,7 +79,14 @@
     var toAdd = [];
     Array.from(rawFiles).forEach(function (f) {
       if (!f.name.toLowerCase().endsWith('.pdf')) {
-        alert('File "' + f.name + '" bukan PDF. Hanya file .pdf yang diterima.');
+        var fileTypeError = document.getElementById('fileTypeError');
+        if (fileTypeError) {
+          fileTypeError.textContent = 'File "' + f.name + '" bukan PDF. Hanya file .pdf yang diterima.';
+          fileTypeError.style.display = 'block';
+          setTimeout(function() {
+            fileTypeError.style.display = 'none';
+          }, 8000);
+        }
         return;
       }
 
@@ -92,7 +99,7 @@
           fileSizeError.style.display = 'block';
           setTimeout(function() {
             fileSizeError.style.display = 'none';
-          }, 4000);
+          }, 8000);
         }
         return;
       }
@@ -103,7 +110,7 @@
           maxFileError.style.display = 'block';
           setTimeout(function() {
             maxFileError.style.display = 'none';
-          }, 4000);
+          }, 8000);
         }
         return;
       }
@@ -304,6 +311,55 @@
     btnNext.disabled = true;
     btnNext.textContent = 'Memproses...';
 
+    // Kalau currentSessionId sudah ada (restore dari riwayat),
+    // skip pembuatan sesi baru dan langsung upload file baru (kalau ada)
+    if (currentSessionId) {
+      var fileBaru = fileList.filter(function(item) { return item.fileObj !== null; });
+
+      if (fileBaru.length === 0) {
+        // Tidak ada file baru, langsung buka modal threshold
+        if (formThreshold) {
+          formThreshold.action = '/sesi/' + currentSessionId + '/hasil-klaster';
+        }
+        modalThreshold.classList.add('active');
+        btnNext.disabled = false;
+        btnNext.textContent = 'Lanjutkan';
+        return;
+      }
+
+      var formFiles = new FormData();
+      fileBaru.forEach(function (item) {
+        formFiles.append('files[]', item.fileObj, item.name);
+      });
+
+      fetch('/sesi/' + currentSessionId + '/unggah/api', {
+        method: 'POST',
+        body: formFiles
+      })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.status !== 'success') {
+          throw new Error(data.message || 'Gagal mengunggah berkas.');
+        }
+        if (data.ditolak && data.ditolak.length > 0) {
+          alert('Beberapa file ditolak backend:\n' + data.ditolak.join('\n'));
+        }
+        if (formThreshold) {
+          formThreshold.action = '/sesi/' + currentSessionId + '/hasil-klaster';
+        }
+        modalThreshold.classList.add('active');
+      })
+      .catch(function (err) {
+        alert('Terjadi kesalahan: ' + err.message);
+      })
+      .finally(function () {
+        btnNext.disabled = false;
+        btnNext.textContent = 'Lanjutkan';
+      });
+      return;
+    }
+
+    // Sesi baru: buat sesi dulu lalu upload
     var formSesi = new FormData();
     formSesi.append('mata_kuliah', matkul);
     formSesi.append('kelas', kelas);
@@ -351,6 +407,50 @@
     });
   });
 
+  function restoreSessionState() {
+    var pathParts = window.location.pathname.split('/');
+    var sesiIndex = pathParts.indexOf('sesi');
+    if (sesiIndex === -1) return;
+
+    var idSesi = pathParts[sesiIndex + 1];
+    if (!idSesi || isNaN(idSesi)) return;
+
+    currentSessionId = parseInt(idSesi);
+
+    fetch('/sesi/' + idSesi + '/state', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.status !== 'selesai') return;
+      if (!data.dokumen || data.dokumen.length === 0) return;
+
+      var matkulEl = document.getElementById('mata_kuliah');
+      var kelasEl  = document.getElementById('kelas');
+      if (matkulEl) matkulEl.value = data.nama_matkul;
+      if (kelasEl)  kelasEl.value  = data.kelas;
+
+      data.dokumen.forEach(function(dok) {
+        fileList.push({
+          name: dok.nama_file,
+          sizeMB: dok.ukuran_file_mb,
+          fileObj: null
+        });
+        usedMB += dok.ukuran_file_mb;
+      });
+
+      renderGrid();
+      updateQuota();
+
+      if (btnNext) btnNext.disabled = false;
+    })
+    .catch(function(err) {
+      console.error('Gagal restore state:', err);
+    });
+  }
+
+  restoreSessionState();
   initDonut();
   updateQuota();
 
