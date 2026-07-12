@@ -8,3 +8,5 @@ instance/
 .pytest_cache/
 .vscode/
 .idea/
+__pycache__/
+*.pyc

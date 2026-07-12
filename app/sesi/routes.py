@@ -115,7 +115,7 @@ def confirm_batch_upload(id_sesi):
             ditolak.append(f'{filename} (ukuran {size_mb:.2f}MB > {max_size_mb}MB)')
             continue
         if sesi.ukuran_terpakai_mb + total_size_baru + size_mb > max_total_mb:
-            ditolak.append(f'{filename} (kuota sesi penuh)')
+            ditolak.append(f'{filename} (kuota penyimpanan sesi {max_total_mb}MB penuh)')
             continue
         file.stream.seek(0)
         if not is_text_based_pdf(file.stream):
@@ -162,108 +162,25 @@ def confirm_batch_upload(id_sesi):
 @sesi_bp.route('/<int:id_sesi>/hasil-klaster', methods=['POST'])
 @login_required
 def update_threshold(id_sesi):
-    from services.embedding_service import embed_semua_dokumen
-    from services.similarity_service import hitung_similarity_matrix
-    from services.clustering_service import jalankan_clustering
-    from models import Klaster, DokumenKlaster, DetailKemiripan
-    from itertools import combinations
-
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
     try:
         threshold_value = float(request.form.get('threshold', ''))
     except (ValueError, TypeError):
-        flash('Nilai threshold tidak valid.', 'error')
-        return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
+        return jsonify({'status': 'error', 'pesan': 'Nilai threshold tidak valid.'}), 400
 
     if not (0 <= threshold_value <= 100):
-        flash('Nilai threshold harus 0-100.', 'error')
         threshold_value = current_app.config['DEFAULT_THRESHOLD']
 
+    # 1. Update nilai threshold di database sesi
     sesi.threshold_awal = threshold_value
-
-    from models import Klaster, DetailKemiripan
-    klaster_list = Klaster.query.filter_by(id_sesi=id_sesi).all()
-    for klaster in klaster_list:
-        detail_list = DetailKemiripan.query.filter_by(
-            id_klaster=klaster.id_klaster
-        ).all()
-        for detail in detail_list:
-            detail.kalimat_highlight1 = None
-            detail.kalimat_highlight2 = None
-
+    
+    # 2. Commit perubahan threshold
     db.session.commit()
-
-    dokumen_list = DokumenTugas.query.filter_by(id_sesi=id_sesi).all()
-    if len(dokumen_list) < 2:
-        flash('Minimal 2 dokumen diperlukan untuk analisis.', 'error')
-        return redirect(url_for('sesi.form_upload', id_sesi=id_sesi))
-
-    klaster_lama = Klaster.query.filter_by(id_sesi=id_sesi).all()
-    if klaster_lama:
-        Klaster.query.filter_by(id_sesi=id_sesi).delete()
-        for dok in dokumen_list:
-            dok.is_outlier = False
-        db.session.flush()
-
-    waktu_mulai = time.time()
-
-    embeddings = embed_semua_dokumen(dokumen_list)
-    similarity_matrix = hitung_similarity_matrix(embeddings)
-    hasil = jalankan_clustering(similarity_matrix, threshold_value)
-
-    waktu_selesai = time.time()
-    waktu_proses_detik = round(waktu_selesai - waktu_mulai, 1)
-
-    for anggota_ids in hasil['kelompok']:
-        skor_dalam_klaster = []
-        for id_a, id_b in combinations(sorted(anggota_ids), 2):
-            key = tuple(sorted([id_a, id_b]))
-            skor = similarity_matrix.get(key, 0.0)
-            skor_dalam_klaster.append(round(skor * 100, 2))
-
-        skor_tertinggi = max(skor_dalam_klaster) if skor_dalam_klaster else 0.0
-        skor_terendah = min(skor_dalam_klaster) if skor_dalam_klaster else 0.0
-
-        klaster_baru = Klaster(
-            id_sesi=id_sesi,
-            skor_tertinggi=skor_tertinggi,
-            skor_terendah=skor_terendah
-        )
-        db.session.add(klaster_baru)
-        db.session.flush()
-
-        for id_dok in anggota_ids:
-            db.session.add(DokumenKlaster(
-                id_klaster=klaster_baru.id_klaster,
-                id_dokumen=id_dok
-            ))
-
-        for id_a, id_b in combinations(sorted(anggota_ids), 2):
-            key = tuple(sorted([id_a, id_b]))
-            skor = similarity_matrix.get(key, 0.0)
-            db.session.add(DetailKemiripan(
-                id_klaster=klaster_baru.id_klaster,
-                id_dokumen1=id_a,
-                id_dokumen2=id_b,
-                persentase_kemiripan=round(skor * 100, 2),
-                kalimat_highlight1=None,
-                kalimat_highlight2=None,
-            ))
-
-    for id_dok in hasil['outlier']:
-        dok = DokumenTugas.query.get(id_dok)
-        if dok:
-            dok.is_outlier = True
-
-    sesi.status = 'analyzed'
-    sesi.tanggal_selesai = datetime.now()
-    db.session.commit()
-
-    session[f'waktu_proses_{id_sesi}'] = waktu_proses_detik
-    session['last_id_sesi'] = id_sesi
-
-    flash(f'Analisis selesai! Threshold {threshold_value:.0f}%.', 'success')
-    return redirect(url_for('analisis.halaman_hasil_klaster', id_sesi=id_sesi))
+    
+    return jsonify({
+        'status': 'sukses',
+        'pesan': f'Ambang batas kemiripan (threshold) berhasil diatur ke {threshold_value:.0f}%.'
+    }), 200
 
 
 @sesi_bp.route('/baru/api', methods=['POST'])
@@ -307,16 +224,24 @@ def api_buat_sesi():
 @login_required
 def api_upload_files(id_sesi):
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
+    existing_files = {d.nama_file for d in DokumenTugas.query.filter_by(id_sesi=id_sesi).all()}
     uploaded_files = request.files.getlist('files[]')
     uploaded_files = [f for f in uploaded_files if f and f.filename]
-
+    
     if not uploaded_files:
         return jsonify({'status': 'error', 'message': 'Tidak ada berkas yang dipilih.'}), 400
-
+    
+    new_unique_count = 0
+    for file in uploaded_files:
+        if file.filename and file.filename not in existing_files:
+            new_unique_count += 1
+            
+    total_prediksi = len(existing_files) + new_unique_count
+    
     max_files = current_app.config['MAX_FILES_PER_SESSION']
-    total_setelah_upload = sesi.total_file_terunggah + len(uploaded_files)
-    if total_setelah_upload > max_files:
-        sisa_kuota = max_files - sesi.total_file_terunggah
+    #total_setelah_upload = sesi.total_file_terunggah + len(uploaded_files)
+    if total_prediksi > max_files:
+        sisa_kuota = max_files - len(existing_files)
         return jsonify({
             'status': 'error',
             'message': f'Jumlah berkas melebihi batas {max_files}. Sisa kuota: {sisa_kuota} berkas.'
@@ -334,29 +259,38 @@ def api_upload_files(id_sesi):
 
     for file in uploaded_files:
         filename = file.filename
+        if filename in existing_files:
+            continue
+        
         if not is_allowed_extension(filename):
             ditolak.append(f'{filename} (format bukan .pdf)')
             continue
+        
         file.stream.seek(0, os.SEEK_END)
         size_bytes = file.stream.tell()
         file.stream.seek(0)
         size_mb = size_bytes / (1024 * 1024)
+        
         if size_mb > max_size_mb:
             ditolak.append(f'{filename} (ukuran {size_mb:.2f}MB > {max_size_mb}MB)')
             continue
+        
         if sesi.ukuran_terpakai_mb + total_size_baru + size_mb > max_total_mb:
             ditolak.append(f'{filename} (kuota sesi penuh)')
             continue
+        
         file.stream.seek(0)
         if not is_text_based_pdf(file.stream):
             ditolak.append(f'{filename} (terdeteksi scan/tidak ada teks)')
             continue
+        
         file.stream.seek(0)
         try:
             raw_text = extract_text_from_pdf(file.stream)
         except Exception:
             ditolak.append(f'{filename} (gagal membaca PDF)')
             continue
+        
         cleaned_text = clean_text(raw_text)
         file.stream.seek(0)
         ext = os.path.splitext(filename)[1]
@@ -374,9 +308,10 @@ def api_upload_files(id_sesi):
         db.session.add(dokumen)
         berhasil.append(filename)
         total_size_baru += size_mb
+        existing_files.add(filename)
 
     if berhasil:
-        sesi.total_file_terunggah += len(berhasil)
+        sesi.total_file_terunggah = len(existing_files)
         sesi.ukuran_terpakai_mb = round(sesi.ukuran_terpakai_mb + total_size_baru, 2)
     db.session.commit()
 

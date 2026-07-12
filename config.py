@@ -52,7 +52,7 @@ class Config:
     MAX_CONTENT_LENGTH = int(MAX_TOTAL_SIZE_MB * 1024 * 1024)
 
     # Batas jumlah file per sesi (sesuai C-09 SRS)
-    MAX_FILES_PER_SESSION = int(os.getenv('MAX_FILES_PER_SESSION', '32'))
+    MAX_FILES_PER_SESSION = int(os.getenv('MAX_FILES_PER_SESSION', '35'))
 
     # Nilai threshold default saat sesi dibuat, skala 0-100
     DEFAULT_THRESHOLD = float(os.getenv('DEFAULT_THRESHOLD', '70'))

@@ -111,8 +111,99 @@ function initReanalyze() {
         btnReanalyze.addEventListener('click', function () {
             const sesiId = this.getAttribute('data-sesi-id');
             formThreshold.action = '/sesi/' + sesiId + '/hasil-klaster';
+
+            const inputThreshold = document.getElementById('input-threshold');
+            const btnSubmitModal = document.getElementById('btn-submit-analysis');
+            const iconSubmitModal = document.getElementById('icon-submit');
+            const labelSubmitModal = document.getElementById('label-submit');
+
+            if (inputThreshold) {
+                inputThreshold.disabled = false;
+                inputThreshold.style.pointerEvents = 'auto';
+                inputThreshold.style.opacity = '1';
+            }
+            if (btnSubmitModal) {
+                btnSubmitModal.disabled = false;
+            }
+            if (iconSubmitModal) {
+                iconSubmitModal.className = 'fa-solid fa-play';
+            }
+            if (labelSubmitModal) {
+                labelSubmitModal.textContent = 'Mulai Analisis';
+            }
+
             modalThreshold.classList.add('active');
         });
+
+        // formThreshold.addEventListener('submit', async function (e) {
+        //     e.preventDefault(); // Blokir refresh halaman bawaan HTML
+
+        //     const sesiId = btnReanalyze.getAttribute('data-sesi-id');
+        //     const submitBtn = formThreshold.querySelector('button[type="submit"]');
+                
+        //     // Simpan teks asli tombol untuk dikembalikan nanti
+        //     const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Proses';
+                
+        //     // Ubah state tombol menjadi loading
+        //     if (submitBtn) {
+        //         submitBtn.disabled = true;
+        //         submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+        //     }
+
+        //     showToast('Memulai Analisis', 'Menyimpan nilai threshold baru...', 'info');
+
+        //     try {
+        //         // ── LANGKAH 1: Kirim data threshold ke Backend ──
+        //         const formData = new FormData(formThreshold);
+        //         const resThreshold = await fetch(`/sesi/${sesiId}/hasil-klaster`, {
+        //             method: 'POST',
+        //             body: formData
+        //         });
+                    
+        //         const dataThreshold = await resThreshold.json();
+
+        //         if (dataThreshold.status !== 'sukses') {
+        //             throw new Error(dataThreshold.pesan || 'Gagal menyimpan threshold.');
+        //         }
+
+        //         // ── LANGKAH 2: Picu rekonstruksi graf (Instan via Cache) ──
+        //         showToast('Sinkronisasi Graf', 'Mengeksekusi pengelompokan ulang dokumen...', 'info');
+                    
+        //         const resAnalisis = await fetch(`/analisis/sesi/${sesiId}/jalankan`, {
+        //             method: 'POST'
+        //         });
+
+        //         const contentType = resAnalisis.headers.get("content-type");
+        //         if (!resAnalisis.ok || !contentType || !contentType.includes("application/json")) {
+        //             // Jika server melempar halaman HTML eror bawaan
+        //             throw new Error(`Server melempar eror status ${resAnalisis.status}. Pastikan file terunggah dengan benar.`);
+        //         }
+                    
+        //         const dataAnalisis = await resAnalisis.json();
+
+        //         if (dataAnalisis.status === 'selesai') {
+        //             showToast('Sukses', 'Analisis ulang berhasil diselesaikan.', 'success');
+                        
+        //             // Skenario penutupan modal & refresh halaman hasil agar grafik/matriks ter-render baru
+        //             modalThreshold.classList.remove('active');
+        //             setTimeout(() => {
+        //                 window.location.reload();
+        //             }, 1000);
+        //         } else {
+        //             throw new Error(dataAnalisis.pesan || 'Gagal menjalankan kalkulasi kelompok graf.');
+        //         }
+
+        //     } catch (error) {
+        //         console.error('Error saat re-clustering:', error);
+        //         showToast('Gagal Analisis', error.message || 'Terjadi kesalahan pada server.', 'error');
+                    
+        //         // Kembalikan state tombol jika gagal agar dosen bisa mencoba lagi
+        //         if (submitBtn) {
+        //             submitBtn.disabled = false;
+        //             submitBtn.innerHTML = originalBtnText;
+        //         }
+        //     }
+        // });
     }
 }
 

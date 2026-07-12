@@ -1,3 +1,4 @@
+import time
 from itertools import combinations
 from flask import jsonify, render_template, request, session as flask_session
 from app.analisis import analisis_bp
@@ -5,7 +6,7 @@ from app.auth.routes import login_required
 from services.highlight_service import proses_highlight
 from models import (
     db, SesiAnalisis, DokumenTugas,
-    Klaster, DokumenKlaster, DetailKemiripan
+    Klaster, DokumenKlaster, DetailKemiripan, SimilarityCache
 )
 from services.embedding_service import embed_semua_dokumen
 from services.similarity_service import hitung_similarity_matrix
@@ -15,6 +16,8 @@ from services.clustering_service import jalankan_clustering
 @analisis_bp.route('/sesi/<int:id_sesi>/jalankan', methods=['POST'])
 @login_required
 def jalankan_analisis_klaster(id_sesi):
+    waktu_mulai=time.time()
+    
     sesi = SesiAnalisis.query.get_or_404(id_sesi)
     dokumen_list = DokumenTugas.query.filter_by(id_sesi=id_sesi).all()
 
@@ -31,16 +34,40 @@ def jalankan_analisis_klaster(id_sesi):
             for dok in dokumen_list:
                 dok.is_outlier = False
             db.session.flush()
+            
+        cache_list = SimilarityCache.query.filter_by(id_sesi=id_sesi).all()
+        
+        if cache_list:
+            # Skenario Re-clustering (Menggunakan Cache)
+            dari_cache = True
+            similarity_matrix = {}
+            for c in cache_list:
+                key = tuple(sorted([c.id_dokumen1, c.id_dokumen2]))
+                similarity_matrix[key] = c.skor
+        else:
+            # Skenario Analisis Pertama Kali (Hitung Berat SBERT)
+            dari_cache = False
 
-        embeddings = embed_semua_dokumen(dokumen_list)
+            embeddings = embed_semua_dokumen(dokumen_list)
 
-        if len(embeddings) < 2:
-            return jsonify({
-                'status': 'error',
-                'pesan': 'Tidak cukup dokumen yang berhasil di-embed.'
-            }), 400
+            if len(embeddings) < 2:
+                return jsonify({
+                    'status': 'error',
+                    'pesan': 'Tidak cukup dokumen yang berhasil di-embed.'
+                }), 400
 
-        similarity_matrix = hitung_similarity_matrix(embeddings)
+            similarity_matrix = hitung_similarity_matrix(embeddings)
+        
+            for (id_a, id_b), skor in similarity_matrix.items():
+                cache_baru = SimilarityCache(
+                    id_sesi=id_sesi,
+                    id_dokumen1=id_a,
+                    id_dokumen2=id_b,
+                    skor=skor
+                )
+                db.session.add(cache_baru)
+            db.session.flush()
+        
         hasil = jalankan_clustering(similarity_matrix, sesi.threshold_awal)
 
         for anggota_ids in hasil['kelompok']:
@@ -86,6 +113,9 @@ def jalankan_analisis_klaster(id_sesi):
 
         sesi.status = 'analyzed'
         db.session.commit()
+        
+        durasi_detik=round(time.time()-waktu_mulai,1)
+        flask_session[f'waktu_proses_{id_sesi}'] = durasi_detik
 
         return jsonify({
             'status': 'selesai',
@@ -93,7 +123,9 @@ def jalankan_analisis_klaster(id_sesi):
             'jumlah_outlier': len(hasil['outlier']),
             'total_pasangan': hasil['total_edge'],
             'edge_aktif': hasil['edge_aktif'],
-            'threshold_dipakai': hasil['threshold_dipakai']
+            'threshold_dipakai': hasil['threshold_dipakai'],
+            'dari_cache': dari_cache,
+            'waktu_proses_detik': durasi_detik
         }), 200
 
     except Exception as e:

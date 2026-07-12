@@ -64,6 +64,7 @@ class SesiAnalisis(db.Model):
     dokumen_tugas    = db.relationship('DokumenTugas',   backref='sesi', lazy='dynamic', cascade='all, delete-orphan')
     klaster          = db.relationship('Klaster',         backref='sesi', lazy='dynamic', cascade='all, delete-orphan')
     laporan_evaluasi = db.relationship('LaporanEvaluasi', backref='sesi', lazy='dynamic', cascade='all, delete-orphan')
+    similarity_cache = db.relationship('SimilarityCache', backref ='sesi_cache', lazy    ='dynamic', cascade ='all, delete-orphan')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -196,6 +197,39 @@ class LaporanEvaluasi(db.Model):
 
     def __repr__(self):
         return f'<LaporanEvaluasi sesi={self.id_sesi} format={self.format_file}>'
+    
+    
+# ╔══════════════════════════════════════════════════════════╗
+# ║  8. SIMILARITY_CACHE                                     ║
+# ║  Menyimpan skor cosine similarity SELURUH pasangan       ║
+# ║  dokumen dalam satu sesi, independen dari klaster.       ║
+# ║  Tujuan: agar re-clustering karena perubahan threshold   ║
+# ║  tidak perlu menjalankan embedding ulang (proses berat). ║
+# ║  Cache dihapus otomatis jika:                            ║
+# ║  - Sesi dihapus (CASCADE dari sesi_analisis)             ║
+# ║  - Dokumen baru diunggah ke sesi yang sama               ║
+# ╚══════════════════════════════════════════════════════════╝
+class SimilarityCache(db.Model):
+    __tablename__ = 'similarity_cache'
+
+    id_sesi     = db.Column(db.Integer,
+                    db.ForeignKey('sesi_analisis.id_sesi',
+                                  ondelete='CASCADE'),
+                    primary_key=True)
+    id_dokumen1 = db.Column(db.Integer,
+                    db.ForeignKey('dokumen_tugas.id_dokumen',
+                                  ondelete='CASCADE'),
+                    primary_key=True)
+    id_dokumen2 = db.Column(db.Integer,
+                    db.ForeignKey('dokumen_tugas.id_dokumen',
+                                  ondelete='CASCADE'),
+                    primary_key=True)
+    skor        = db.Column(db.Float, nullable=False)
+
+    def __repr__(self):
+        return (f'<SimilarityCache sesi={self.id_sesi} '
+                f'dok{self.id_dokumen1}-dok{self.id_dokumen2} '
+                f'{self.skor}>')
 
 
 # ╔══════════════════════════════════════════════════════════╗

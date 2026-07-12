@@ -216,7 +216,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const modalBackdrop = document.getElementById('modal-threshold');
-        const btnReanalyze = document.getElementById('btn-reanalyze');
+        //const btnReanalyze = document.getElementById('btn-reanalyze');
         const btnCloseModal = document.getElementById('btn-close-modal');
         const inputThreshold = document.getElementById('input-threshold');
         const thresholdDisplayVal = document.getElementById('threshold-display-val');
@@ -225,26 +225,28 @@
         const iconSubmit = document.getElementById('icon-submit');
         const labelSubmit = document.getElementById('label-submit');
 
-        if (btnReanalyze) {
-            btnReanalyze.addEventListener('click', function (e) {
-                e.preventDefault();
+        const sedangDiHalamanHasilKlaster = !!document.getElementById('btn-reanalyze');
 
-                const icon = this.querySelector('i');
-                if (icon) {
-                    icon.classList.add('fa-spin');
-                    setTimeout(() => {
-                        icon.classList.remove('fa-spin');
-                    }, 500);
-                }
+        //if (btnReanalyze) {
+        //    btnReanalyze.addEventListener('click', function (e) {
+        //        e.preventDefault();
 
-                resetModal();
+        //        const icon = this.querySelector('i');
+        //        if (icon) {
+        //            icon.classList.add('fa-spin');
+        //            setTimeout(() => {
+        //                icon.classList.remove('fa-spin');
+        //            }, 500);
+        //        }
 
-                modalBackdrop.style.display = 'flex';
-                setTimeout(() => {
-                    modalBackdrop.classList.add('show');
-                }, 10);
-            });
-        }
+        //        resetModal();
+
+        //        modalBackdrop.style.display = 'flex';
+        //        setTimeout(() => {
+        //            modalBackdrop.classList.add('show');
+        //        }, 10);
+        //    });
+        //}
 
         if (btnCloseModal) {
             btnCloseModal.addEventListener('click', closeModal);
@@ -264,31 +266,31 @@
             modalBackdrop.classList.remove('show');
             modalBackdrop.classList.remove('active');
             setTimeout(() => {
-                modalBackdrop.style.display = 'none';
+                modalBackdrop.style.removeProperty('display');
             }, 250);
         }
 
-        function resetModal() {
-            if (inputThreshold) {
-                inputThreshold.disabled = false;
-                inputThreshold.style.pointerEvents = 'auto';
-                inputThreshold.style.opacity = '1';
-            }
-            if (btnSubmit) {
-                btnSubmit.disabled = false;
-            }
-            if (iconSubmit) {
-                iconSubmit.className = 'fa-solid fa-play';
-            }
-            if (labelSubmit) {
-                labelSubmit.textContent = 'Mulai Analisis';
-            }
-            if (btnCloseModal) {
-                btnCloseModal.style.display = '';
-            }
-            const errorEl = document.getElementById('modal-error-msg');
-            if (errorEl) errorEl.textContent = '';
-        }
+        //function resetModal() {
+        //    if (inputThreshold) {
+        //        inputThreshold.disabled = false;
+        //        inputThreshold.style.pointerEvents = 'auto';
+        //        inputThreshold.style.opacity = '1';
+        //    }
+        //    if (btnSubmit) {
+        //        btnSubmit.disabled = false;
+        //    }
+        //    if (iconSubmit) {
+        //        iconSubmit.className = 'fa-solid fa-play';
+        //    }
+        //    if (labelSubmit) {
+        //        labelSubmit.textContent = 'Mulai Analisis';
+        //    }
+        //    if (btnCloseModal) {
+        //        btnCloseModal.style.display = '';
+        //    }
+        //    const errorEl = document.getElementById('modal-error-msg');
+        //    if (errorEl) errorEl.textContent = '';
+        //}
 
         if (inputThreshold && thresholdDisplayVal) {
             inputThreshold.addEventListener('input', function () {
@@ -296,64 +298,25 @@
             });
         }
 
-        if (formThreshold) {
-            formThreshold.addEventListener('submit', function (e) {
-                e.preventDefault();
+        //function beriTahu(pesan, tipe) {
+        //    if (typeof window.showToast === 'function') {
+        //        window.showToast(tipe === 'error' ? 'Gagal' : 'Info', pesan, tipe || 'info');
+        //    } else {
+        //        alert(pesan);
+        //    }
+        //}
 
-                const thresholdValue = inputThreshold ? inputThreshold.value : 70;
-                const formAction = formThreshold.action;
-                const idSesi = formAction.split('/sesi/')[1].split('/')[0];
-
-                if (inputThreshold) {
-                    inputThreshold.style.pointerEvents = 'none';
-                    inputThreshold.style.opacity = '0.5';
-                }
-                if (btnSubmit) btnSubmit.disabled = true;
-                if (iconSubmit) iconSubmit.className = 'fa-solid fa-arrows-rotate fa-spin';
-                if (labelSubmit) labelSubmit.textContent = 'Menganalisis...';
-                if (btnCloseModal) btnCloseModal.style.display = 'none';
-
-                const formData = new FormData();
-                formData.append('threshold', thresholdValue);
-
-                fetch(`/sesi/${idSesi}/hasil-klaster`, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error('Gagal menyimpan threshold.');
-                    return fetch(`/analisis/sesi/${idSesi}/jalankan`, {
-                        method: 'POST'
-                    });
-                })
-                .then(res => res.json().then(data => ({ status: res.status, data })))
-                .then(({ status, data }) => {
-                    if (status === 200 && data.status === 'selesai') {
-                        window.location.href = `/analisis/sesi/${idSesi}/hasil`;
-                    } else if (status === 400) {
-                        tampilkanError(data.pesan || 'Validasi gagal.');
-                    } else if (status === 500) {
-                        tampilkanError(data.pesan || 'Analisis gagal. Silakan coba kembali.');
-                    } else {
-                        tampilkanError('Terjadi kesalahan tidak terduga.');
-                    }
-                })
-                .catch(err => {
-                    tampilkanError('Terjadi kesalahan: ' + err.message);
-                });
-            });
+        function setModalLoadingState(isLoading) {
+            if (inputThreshold) {
+                inputThreshold.style.pointerEvents = isLoading ? 'none' : 'auto';
+                inputThreshold.style.opacity = isLoading ? '0.5' : '1';
+            }
+            if (btnSubmit) btnSubmit.disabled = isLoading;
+            if (iconSubmit) iconSubmit.className = isLoading ? 'fa-solid fa-arrows-rotate fa-spin' : 'fa-solid fa-play';
+            if (labelSubmit) labelSubmit.textContent = isLoading ? 'Menganalisis...' : 'Mulai Analisis';
         }
 
-        function tampilkanError(pesan) {
-            if (inputThreshold) {
-                inputThreshold.style.pointerEvents = 'auto';
-                inputThreshold.style.opacity = '1';
-            }
-            if (btnSubmit) btnSubmit.disabled = false;
-            if (iconSubmit) iconSubmit.className = 'fa-solid fa-play';
-            if (labelSubmit) labelSubmit.textContent = 'Mulai Analisis';
-            if (btnCloseModal) btnCloseModal.style.display = '';
-
+        function tampilkanErrorModal(pesan) {
             let errorEl = document.getElementById('modal-error-msg');
             if (!errorEl) {
                 errorEl = document.createElement('p');
@@ -362,10 +325,135 @@
                 document.querySelector('.modal-actions-center').after(errorEl);
             }
             errorEl.textContent = pesan;
-
+ 
             setTimeout(() => {
-                errorEl.textContent = '';
+                if (errorEl) errorEl.textContent = '';
             }, 6000);
         }
+
+        if (formThreshold) {
+            formThreshold.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                //const thresholdValue = inputThreshold ? inputThreshold.value : 70;
+                const formAction = formThreshold.action;
+                const idSesi = formAction.split('/sesi/')[1].split('/')[0];
+
+                setModalLoadingState(true);
+                const errorElLama = document.getElementById('modal-error-msg');
+                if (errorElLama) errorElLama.textContent = '';
+                //beriTahu('Menyimpan nilai threshold baru...', 'info');
+
+                try{
+                    const formData = new FormData(formThreshold);
+                    const resThreshold = await fetch(formAction, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const dataThreshold = await resThreshold.json();
+                
+                if (dataThreshold.status !== 'sukses') {
+                    throw new Error(dataThreshold.pesan || 'Gagal menyimpan threshold.');
+                }
+
+                //beriTahu('Mengeksekusi analisis klaster dengan threshold baru...', 'info');
+
+                const resAnalisis = await fetch(`/analisis/sesi/${idSesi}/jalankan`, {
+                    method: 'POST'
+                });
+
+                const contentType = resAnalisis.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error(`Server melempar error status ${resAnalisis.status}. Pastikan file terunggah dengan benar`);
+                }
+
+                const dataAnalisis = await resAnalisis.json();
+
+                if (dataAnalisis.status === 'selesai') {
+                    //beriTahu('Analisis berhasil diselesaikan.', 'success');
+                    modalBackdrop.classList.remove('show');
+                    modalBackdrop.classList.remove('active');
+
+                    setTimeout(() => {
+                            if (sedangDiHalamanHasilKlaster) {
+                                // Sudah di halaman hasil klaster -> reload supaya data baru tampil
+                                window.location.reload();
+                            } else {
+                                // Di halaman unggah dokumen (sesi baru) -> pindah ke halaman hasil klaster
+                                window.location.href = `/analisis/sesi/${idSesi}/hasil`;
+                            }
+                        }, 800);
+                    } else {
+                        throw new Error(dataAnalisis.pesan || 'Gagal menjalankan kalkulasi kelompok graf');
+                    }
+                } catch (error) {
+                    console.error('Error saat menjalankan analisis:', error);
+                    tampilkanErrorModal(error.message || 'Terjadi kesalahan pada server.');
+                    setModalLoadingState(false);
+                }
+
+                //if (inputThreshold) {
+                //    inputThreshold.style.pointerEvents = 'none';
+                //    inputThreshold.style.opacity = '0.5';
+                //}
+                //if (btnSubmit) btnSubmit.disabled = true;
+                //if (iconSubmit) iconSubmit.className = 'fa-solid fa-arrows-rotate fa-spin';
+                //if (labelSubmit) labelSubmit.textContent = 'Menganalisis...';
+                //if (btnCloseModal) btnCloseModal.style.display = 'none';
+
+                //const formData = new FormData();
+                //formData.append('threshold', thresholdValue);
+
+                //fetch(`/sesi/${idSesi}/hasil-klaster`, {
+                //    method: 'POST',
+                //    body: formData
+                //})
+                //.then(res => {
+                //    if (!res.ok) throw new Error('Gagal menyimpan threshold.');
+                //    return fetch(`/analisis/sesi/${idSesi}/jalankan`, {
+                //        method: 'POST'
+                //    });
+                //})
+                //.then(res => res.json().then(data => ({ status: res.status, data })))
+                //.then(({ status, data }) => {
+                //    if (status === 200 && data.status === 'selesai') {
+                //        window.location.href = `/analisis/sesi/${idSesi}/hasil`;
+                //    } else if (status === 400) {
+                //        tampilkanError(data.pesan || 'Validasi gagal.');
+                //    } else if (status === 500) {
+                //        tampilkanError(data.pesan || 'Analisis gagal. Silakan coba kembali.');
+                //    } else {
+                //        tampilkanError('Terjadi kesalahan tidak terduga.');
+                //    }
+                //})
+                //.catch(err => {
+                //    tampilkanError('Terjadi kesalahan: ' + err.message);
+                //});
+            });
+        }
+
+        //function tampilkanError(pesan) {
+        //    if (inputThreshold) {
+        //        inputThreshold.style.pointerEvents = 'auto';
+        //        inputThreshold.style.opacity = '1';
+        //    }
+        //    if (btnSubmit) btnSubmit.disabled = false;
+        //    if (iconSubmit) iconSubmit.className = 'fa-solid fa-play';
+        //    if (labelSubmit) labelSubmit.textContent = 'Mulai Analisis';
+        //    if (btnCloseModal) btnCloseModal.style.display = '';
+
+        //    let errorEl = document.getElementById('modal-error-msg');
+        //    if (!errorEl) {
+        //        errorEl = document.createElement('p');
+        //        errorEl.id = 'modal-error-msg';
+        //        errorEl.style.cssText = 'color:#EF4444; font-size:13px; text-align:center; margin-top:12px;';
+        //        document.querySelector('.modal-actions-center').after(errorEl);
+        //    }
+        //    errorEl.textContent = pesan;
+
+        //    setTimeout(() => {
+        //        errorEl.textContent = '';
+        //    }, 6000);
+        //    }
     });
 </script>

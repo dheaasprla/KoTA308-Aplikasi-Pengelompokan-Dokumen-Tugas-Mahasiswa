@@ -104,6 +104,24 @@
         return;
       }
 
+      var sudahAda = fileList.some(function (item) { 
+        return item.name === f.name && item.sizeMB.toFixed(2) === sizeMB.toFixed(2);
+      }) || toAdd.some(function (item) {
+        return item.name === f.name && item.sizeMB.toFixed(2) === sizeMB.toFixed(2);
+      });
+
+      if (sudahAda) {
+        var fileTypeError = document.getElementById('fileTypeError');
+        if (fileTypeError) {
+          fileTypeError.textContent = 'File "' + f.name + '" sudah ada di daftar, dilewati.';
+          fileTypeError.style.display = 'block';
+          setTimeout(function() {
+            fileTypeError.style.display = 'none';
+          }, 8000);
+        }
+        return;
+      }
+
       if (fileList.length + toAdd.length >= MAX_FILES) {
         var maxFileError = document.getElementById('maxFileError');
         if (maxFileError) {
@@ -321,6 +339,7 @@
         if (formThreshold) {
           formThreshold.action = '/sesi/' + currentSessionId + '/hasil-klaster';
         }
+        modalThreshold.style.display = '';
         modalThreshold.classList.add('active');
         btnNext.disabled = false;
         btnNext.textContent = 'Lanjutkan';
@@ -347,6 +366,7 @@
         if (formThreshold) {
           formThreshold.action = '/sesi/' + currentSessionId + '/hasil-klaster';
         }
+        modalThreshold.style.display = '';
         modalThreshold.classList.add('active');
       })
       .catch(function (err) {
@@ -396,6 +416,7 @@
       if (formThreshold) {
         formThreshold.action = '/sesi/' + currentSessionId + '/hasil-klaster';
       }
+      modalThreshold.style.display = '';
       modalThreshold.classList.add('active');
     })
     .catch(function (err) {

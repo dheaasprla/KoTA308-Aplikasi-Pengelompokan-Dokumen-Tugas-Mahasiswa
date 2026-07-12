@@ -5,10 +5,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const doc1BodyEl = document.getElementById('compare-doc1-body');
     const doc2BodyEl = document.getElementById('compare-doc2-body');
 
-    const initialCell = document.querySelector('.similarity-cell');
-    if (initialCell) {
-        activateCell(initialCell);
-    }
+    // const initialCell = document.querySelector('.similarity-cell');
+    // if (initialCell) {
+    //     activateCell(initialCell);
+    // }
+
+    doc1BodyEl.innerHTML = '<p style="color:#888; font-style:italic;">Pilih sel untuk melihat perbandingan teks.</p>';
+    doc2BodyEl.innerHTML = '<p style="color:#888; font-style:italic;">Pilih sel untuk melihat perbandingan teks.</p>';
 
     cells.forEach(cell => {
         cell.addEventListener('click', function () {
@@ -17,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function activateCell(cell) {
-        cells.forEach(c => c.classList.remove('active-cell'));
+        cells.forEach(c => c.classList.remove('active-cell'));  
         cell.classList.add('active-cell');
 
         const doc1 = cell.getAttribute('data-doc1');
