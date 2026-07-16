@@ -41,6 +41,10 @@ from sentence_transformers import SentenceTransformer
 # pelatihannya (NLI dataset dengan rata-rata kalimat pendek).
 CHUNK_SIZE = 128
 
+# Jumlah kata yang di-overlap antar potongan saat memecah SATU
+# kalimat yang super panjang (lihat pecah_kalimat_super_panjang).
+OVERLAP_KATA_KALIMAT_PANJANG = 5
+
 
 def split_into_sentences(text: str) -> list[str]:
     """
@@ -78,6 +82,66 @@ def split_into_sentences(text: str) -> list[str]:
 
     return sentences
 
+def pecah_kalimat_super_panjang(
+    kalimat: str,
+    tokenizer,
+    chunk_size: int = CHUNK_SIZE,
+    overlap_kata: int = OVERLAP_KATA_KALIMAT_PANJANG
+) -> list[str]:
+    """
+    Memecah SATU kalimat yang ternyata masih melebihi chunk_size
+    token menjadi beberapa potongan aman, dengan sedikit overlap
+    antar potongan.
+ 
+    Kasus ini terjadi ketika split_into_sentences() gagal memecah
+    teks secara wajar (biasanya karena teks sumber dari PDF minim
+    tanda baca, misalnya hasil ekstraksi tabel atau daftar), sehingga
+    satu "kalimat" hasil pecahan bisa berukuran ratusan token.
+ 
+    Pemecahan dilakukan per kata (bukan per sub-kalimat, karena
+    memang tidak ada tanda baca yang bisa dijadikan acuan lagi
+    di titik ini). Overlap antar potongan tetap diterapkan untuk
+    menjaga sedikit jembatan konteks, konsisten dengan filosofi
+    sliding window yang dipakai di seluruh pipeline chunking ini,
+    meskipun potongan ini bukan lagi berbasis kalimat utuh.
+ 
+    Args:
+        kalimat    : teks kalimat yang terlalu panjang
+        tokenizer  : tokenizer dari model SentenceTransformer
+        chunk_size : batas maksimum token per potongan (default 128)
+        overlap_kata: jumlah kata yang di-overlap antar potongan
+ 
+    Returns:
+        List string, setiap elemen adalah potongan kalimat yang
+        aman di-encode (token count <= chunk_size). Kalau kalimat
+        sudah aman dari awal, dikembalikan sebagai list berisi
+        satu elemen (kalimat itu sendiri, tidak diubah).
+    """
+    kata_list = kalimat.split(' ')
+    potongan = []
+    kata_sekarang = []
+    token_sekarang = 0
+ 
+    for kata in kata_list:
+        token_kata = len(tokenizer.tokenize(kata))
+ 
+        if token_sekarang + token_kata > chunk_size and kata_sekarang:
+            potongan.append(' '.join(kata_sekarang))
+ 
+            # Sliding window di level kata: ambil beberapa kata
+            # terakhir dari potongan yang baru selesai, jadikan
+            # awal potongan berikutnya sebagai jembatan konteks.
+            overlap = kata_sekarang[-overlap_kata:]
+            kata_sekarang = overlap + [kata]
+            token_sekarang = sum(len(tokenizer.tokenize(k)) for k in kata_sekarang)
+        else:
+            kata_sekarang.append(kata)
+            token_sekarang += token_kata
+ 
+    if kata_sekarang:
+        potongan.append(' '.join(kata_sekarang))
+ 
+    return potongan if potongan else [kalimat]
 
 def group_sentences_into_chunks(
     sentences: list[str],
@@ -128,7 +192,8 @@ def group_sentences_into_chunks(
                 chunks.append(' '.join(current_sentences))
                 current_sentences = []
                 current_token_count = 0
-            chunks.append(sentence)
+            potongan_aman = pecah_kalimat_super_panjang(sentence, tokenizer, chunk_size)
+            chunks.extend(potongan_aman)
             continue
 
         # ── Kalimat masih muat di chunk saat ini ──

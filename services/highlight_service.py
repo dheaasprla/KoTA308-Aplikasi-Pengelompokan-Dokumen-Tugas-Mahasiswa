@@ -28,7 +28,11 @@ import json
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from services.embedding_service import get_model
-from utils.chunking import split_into_sentences
+from utils.chunking import (
+    split_into_sentences,
+    pecah_kalimat_super_panjang,
+    CHUNK_SIZE
+)
 
 
 def encode_kalimat(kalimat_list: list[str]) -> np.ndarray:
@@ -50,11 +54,37 @@ def encode_kalimat(kalimat_list: list[str]) -> np.ndarray:
     model = get_model()
     # model.encode() menerima list of string dan mengembalikan
     # matrix (n x 768) di mana n = jumlah kalimat
-    return model.encode(
-        kalimat_list,
+    
+    tokenizer = model.tokenizer
+    kalimat_aman = []
+    
+    for kalimat in kalimat_list:
+        jumlah_token = len(tokenizer.tokenize(kalimat))
+        if jumlah_token <= CHUNK_SIZE:
+            kalimat_aman.append([kalimat])
+        else:
+            potongan = pecah_kalimat_super_panjang(kalimat, tokenizer, CHUNK_SIZE)
+            kalimat_aman.append(potongan)
+            
+    semua_potongan_flat = [p for grup in kalimat_aman for p in grup]
+    if not semua_potongan_flat:
+        return np.zeros((0, model.get_sentence_embedding_dimension()))
+ 
+    embeddings_flat = model.encode(
+        semua_potongan_flat,
         show_progress_bar=False,
         convert_to_numpy=True
     )
+    
+    hasil = []
+    idx = 0
+    for grup in kalimat_aman:
+        n = len(grup)
+        vektor_grup = embeddings_flat[idx:idx + n]
+        hasil.append(np.mean(vektor_grup, axis=0))
+        idx += n
+ 
+    return np.array(hasil)
 
 
 def deteksi_kalimat_mirip(
