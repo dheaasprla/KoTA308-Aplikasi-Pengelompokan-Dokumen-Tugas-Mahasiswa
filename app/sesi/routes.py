@@ -1,7 +1,5 @@
 ﻿import os
 import uuid
-import time
-from datetime import datetime
 from flask import (
     render_template, request, redirect, url_for,
     flash, session, current_app, jsonify
@@ -14,6 +12,7 @@ from utils.pdf_validator import (
     is_allowed_extension,
     is_text_based_pdf,
     extract_text_from_pdf,
+    MIN_TEXT_LENGTH,
 )
 from utils.text_preprocessor import clean_text
 
@@ -118,8 +117,14 @@ def confirm_batch_upload(id_sesi):
             ditolak.append(f'{filename} (kuota penyimpanan sesi {max_total_mb}MB penuh)')
             continue
         file.stream.seek(0)
-        if not is_text_based_pdf(file.stream):
-            ditolak.append(f'{filename} (terdeteksi scan/tidak ada teks)')
+        is_valid, char_count = is_text_based_pdf(file.stream)
+        if not is_valid:
+            ditolak.append(
+                f'{filename} (teks yang berhasil diekstrak hanya '
+                f'{char_count} karakter, di bawah batas minimum '
+                f'{MIN_TEXT_LENGTH} karakter yang diperlukan. '
+                f'Pastikan dokumen berisi konten teks yang dapat dibaca.)'
+            )
             continue
         file.stream.seek(0)
         try:
@@ -173,6 +178,16 @@ def update_threshold(id_sesi):
 
     # 1. Update nilai threshold di database sesi
     sesi.threshold_awal = threshold_value
+    
+    from models import Klaster, DetailKemiripan
+    klaster_list = Klaster.query.filter_by(id_sesi=id_sesi).all()
+    for klaster in klaster_list:
+        detail_list = DetailKemiripan.query.filter_by(
+            id_klaster=klaster.id_klaster
+        ).all()
+        for detail in detail_list:
+            detail.kalimat_highlight1 = None
+            detail.kalimat_highlight2 = None
     
     # 2. Commit perubahan threshold
     db.session.commit()
@@ -280,8 +295,14 @@ def api_upload_files(id_sesi):
             continue
         
         file.stream.seek(0)
-        if not is_text_based_pdf(file.stream):
-            ditolak.append(f'{filename} (terdeteksi scan/tidak ada teks)')
+        is_valid, char_count = is_text_based_pdf(file.stream)
+        if not is_valid:
+            ditolak.append(
+                f'{filename} (teks yang berhasil diekstrak hanya '
+                f'{char_count} karakter, di bawah batas minimum '
+                f'{MIN_TEXT_LENGTH} karakter yang diperlukan. '
+                f'Pastikan dokumen berisi konten teks yang dapat dibaca.)'
+            )
             continue
         
         file.stream.seek(0)

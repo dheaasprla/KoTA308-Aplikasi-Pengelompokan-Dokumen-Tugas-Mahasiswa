@@ -35,6 +35,10 @@
   var modalThreshold = document.getElementById('modal-threshold');
   var formThreshold  = document.getElementById('form-threshold');
 
+  var modalDitolak    = document.getElementById('modal-ditolak');
+  var ditolakList     = document.getElementById('ditolak-list');
+  var btnTutupDitolak = document.getElementById('btn-tutup-ditolak');  
+
   var matkulInput = document.getElementById('mata_kuliah');
   var kelasInput  = document.getElementById('kelas');
   var matkulError = document.getElementById('matkulRequiredError');
@@ -200,6 +204,89 @@
   btnCloseUpload.addEventListener('click', cancelUpload);
   btnBatalUnggah.addEventListener('click', cancelUpload);
 
+  function pisahkanNamaDanAlasan(pesan) {
+    var match = pesan.match(/^(.*?)\s*\((.*)\)$/);
+    if (match) {
+      return { nama: match[1], alasan: match[2] };
+    }
+    return { nama: pesan, alasan: '' };
+  }
+
+  var callbackSetelahTutupDitolak = null;
+
+  function tampilkanModalDitolak(daftarDitolak, onClose) {
+    callbackSetelahTutupDitolak = onClose || null;
+
+    if (!modalDitolak || !ditolakList) {
+      alert('Beberapa file ditolak backend:\n' + daftarDitolak.join('\n'));
+      if (callbackSetelahTutupDitolak) {
+        var cbFallback = callbackSetelahTutupDitolak;
+        callbackSetelahTutupDitolak = null;
+        cbFallback();
+      }
+      return;
+    }
+
+    ditolakList.innerHTML = daftarDitolak.map(function (pesan) {
+      var bagian = pisahkanNamaDanAlasan(pesan);
+      return '<div class="ditolak-item">' +
+        '<i class="fa-solid fa-file-circle-xmark"></i>' +
+        '<div class="ditolak-item-text">' +
+          '<div class="ditolak-item-name">' + escHtml(bagian.nama) + '</div>' +
+          '<div class="ditolak-item-reason">' + escHtml(bagian.alasan) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    modalDitolak.style.display = '';
+    modalDitolak.classList.add('active');
+  }
+
+  function tutupModalDitolak() {
+    modalDitolak.classList.remove('active');
+    setTimeout(function () {
+      modalDitolak.style.removeProperty('display');
+      if (callbackSetelahTutupDitolak) {
+        var cb = callbackSetelahTutupDitolak;
+        callbackSetelahTutupDitolak = null;
+        cb();
+      }
+    }, 200);
+  }
+
+  if (btnTutupDitolak) {
+    btnTutupDitolak.addEventListener('click', tutupModalDitolak);
+  }
+ 
+  if (modalDitolak) {
+    modalDitolak.addEventListener('click', function (e) {
+      if (e.target === modalDitolak) {
+        tutupModalDitolak();
+      }
+    });
+  }
+
+  function bukaModalThreshold(sesiId) {
+    if (formThreshold) {
+      formThreshold.action = '/sesi/' + sesiId + '/hasil-klaster';
+    }
+    modalThreshold.style.display = '';
+    modalThreshold.classList.add('active');
+  }
+
+  function hapusFileDariDaftar(daftarNamaFile) {
+    daftarNamaFile.forEach(function (nama) {
+      var idx = fileList.findIndex(function (item) { return item.name === nama; });
+      if (idx !== -1) {
+        usedMB -= fileList[idx].sizeMB;
+        if (usedMB < 0) usedMB = 0;
+        fileList.splice(idx, 1);
+      }
+    });
+    renderGrid();
+    updateQuota();
+  }
+
   function renderGrid() {
     filesGrid.innerHTML = '';
     if (fileList.length === 0) {
@@ -335,12 +422,7 @@
       var fileBaru = fileList.filter(function(item) { return item.fileObj !== null; });
 
       if (fileBaru.length === 0) {
-        // Tidak ada file baru, langsung buka modal threshold
-        if (formThreshold) {
-          formThreshold.action = '/sesi/' + currentSessionId + '/hasil-klaster';
-        }
-        modalThreshold.style.display = '';
-        modalThreshold.classList.add('active');
+        bukaModalThreshold(currentSessionId);
         btnNext.disabled = false;
         btnNext.textContent = 'Lanjutkan';
         return;
@@ -361,13 +443,15 @@
           throw new Error(data.message || 'Gagal mengunggah berkas.');
         }
         if (data.ditolak && data.ditolak.length > 0) {
-          alert('Beberapa file ditolak backend:\n' + data.ditolak.join('\n'));
+          var namaFileDitolak = data.ditolak.map(function (pesan) {
+            return pisahkanNamaDanAlasan(pesan).nama;
+          });
+          tampilkanModalDitolak(data.ditolak, function () {
+            hapusFileDariDaftar(namaFileDitolak);
+          });
+        } else {
+          bukaModalThreshold(currentSessionId);
         }
-        if (formThreshold) {
-          formThreshold.action = '/sesi/' + currentSessionId + '/hasil-klaster';
-        }
-        modalThreshold.style.display = '';
-        modalThreshold.classList.add('active');
       })
       .catch(function (err) {
         alert('Terjadi kesalahan: ' + err.message);
@@ -411,13 +495,15 @@
         throw new Error(data.message || 'Gagal mengunggah berkas.');
       }
       if (data.ditolak && data.ditolak.length > 0) {
-        alert('Beberapa file ditolak backend:\n' + data.ditolak.join('\n'));
+        var namaFileDitolak = data.ditolak.map(function (pesan) {
+          return pisahkanNamaDanAlasan(pesan).nama;
+        });
+        tampilkanModalDitolak(data.ditolak, function () {
+          hapusFileDariDaftar(namaFileDitolak);
+        });
+      } else {
+        bukaModalThreshold(currentSessionId);
       }
-      if (formThreshold) {
-        formThreshold.action = '/sesi/' + currentSessionId + '/hasil-klaster';
-      }
-      modalThreshold.style.display = '';
-      modalThreshold.classList.add('active');
     })
     .catch(function (err) {
       alert('Terjadi kesalahan: ' + err.message);

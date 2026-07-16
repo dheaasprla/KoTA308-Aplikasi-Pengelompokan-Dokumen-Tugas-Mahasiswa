@@ -73,6 +73,7 @@
         .alert i {
             color: var(--warn-text);
             font-size: 14px;
+            font-size: 14px;
             flex-shrink: 0;
         }
 
@@ -733,6 +734,106 @@
             text-align: right;
         }
 
+        .modal-ditolak-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 28px 24px;
+            width: 480px;
+            max-width: 92vw;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+        }
+
+        .modal-ditolak-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .modal-ditolak-icon {
+            color: var(--red);
+            font-size: 22px;
+        }
+
+        .modal-ditolak-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .modal-ditolak-desc {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 300;
+            color: #6D7E91;
+            margin-bottom: 18px;
+        }
+
+        .modal-ditolak-list {
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-right: 4px;
+        }
+
+        .ditolak-item {
+            background: #FFF5F5;
+            border: 1px solid #FFD4D4;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .ditolak-item i {
+            color: var(--red);
+            font-size: 14px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .ditolak-item-name {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 3px;
+            word-break: break-word;
+        }
+
+        .ditolak-item-reason {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 300;
+            color: #6D7E91;
+            line-height: 1.4;
+        }
+
+        .btn-tutup-ditolak {
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            flex-shrink: 0;
+        }
+
+        .btn-tutup-ditolak:hover {
+            opacity: 0.88;
+        }
+
         .btn-mulai-analisis {
             width: 100%;
             background: #1C3B87;
@@ -834,7 +935,6 @@
                 </div>
                 <span id="maxFileError" style="display:none; color:#EF4444; font-size:12px; margin-top:6px;">Batas maksimal 35 file tercapai.</span>
                 <span id="fileSizeError" style="display:none; color:#EF4444; font-size:12px; margin-top:6px;"></span>
-                <span id="fileSizeError" style="display:none; color:#EF4444; font-size:12px; margin-top:6px;"></span>
                 <span id="fileTypeError" style="display:none; color:#EF4444; font-size:12px; margin-top:6px;"></span>
                 <div class="warn-card">
                     <div class="warn-title"><i class="fa-solid fa-triangle-exclamation"></i> Batasan Sistem</div>
@@ -881,6 +981,20 @@
             </div>
             <div class="upload-pct-label"><span id="progress-text">0%</span></div>
             <button type="button" class="btn-batal-unggah" id="btn-batal-unggah">Batal Unggah</button>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="modal-ditolak">
+        <div class="modal-ditolak-card">
+            <div class="modal-ditolak-header">
+                <i class="fa-solid fa-circle-exclamation modal-ditolak-icon"></i>
+                <span class="modal-ditolak-title">Beberapa Dokumen Ditolak</span>
+            </div>
+            <p class="modal-ditolak-desc">
+                Dokumen berikut tidak dapat diproses backend karena tidak memenuhi syarat validasi.
+            </p>
+            <div class="modal-ditolak-list" id="ditolak-list"></div>
+            <button type="button" class="btn-tutup-ditolak" id="btn-tutup-ditolak">Mengerti</button>
         </div>
     </div>
 
